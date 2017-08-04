@@ -7,6 +7,7 @@ import reddit as reddit_control
 import time
 import urllib
 
+
 DESKTOP_IDENTIFIER = 'desktop*'
 SETTINGS = None
 
@@ -54,7 +55,7 @@ def get_export_folder(prefix='export'):
         else:
             # TODO apple
             print("Cannot find desktop, using working directory")
-            export_directory = os.cwd()
+            export_directory = os.getcwd()
 
     # Create export folder, with timestamp
     t = time.time()
@@ -68,39 +69,54 @@ def scrape_reddit(settings, export_folder, verbose=False):
     # Retrieve reddit posts
     # TODO different date ranges
     reddit_posts = []
-    for subreddit in subreddits:
-        subreddit_posts = reddit_control.get_posts_by_date(
-            subreddit=subreddit['name'],
-            min_score=subreddit['min_karma'],
-            days=7,
-            verbose=True
-        )
-        reddit_posts += subreddit_posts
+    with click.progressbar(subreddits, label='Scanning subreddits') as bar:
+        for subreddit in bar:
+            subreddit_posts = reddit_control.get_posts_by_date(
+                subreddit=subreddit['name'],
+                min_score=subreddit['min_karma'],
+                days=7,
+            )
+            reddit_posts += subreddit_posts
+
+    # Extract post data and download files
+    post_num = 0
+    post_info = ''
+
+    with click.progressbar(reddit_posts, label='Downloading posts') as bar:
+        for post in bar:
+            post_num += 1
+            try:
+                post_url = post['url']
+                post_domain = post['domain']
+                
+                if post_domain == 'gfycat.com':
+                    post_url = post_url[:8] + 'zippy.' + post_url[8:] + '.webm'
+                if post_url.endswith('gifv'):
+                    post_url = post_url[:-4] + 'mp4'
+
+                _, extension = os.path.splitext(post_url)
+                if extension is not None:
+                    download_image_from_url(post_url, export_folder, 
+                        str(post_num) + extension)
+                else:
+                    download_image_from_url(post_url, export_folder)
+
+                post_info += "{:>3}\t{}\n{}\n{}\n\n".format(
+                    post_num, post['author'], 
+                    post['permalink'].encode('utf-8'), 
+                    post_url)
+            except (FileNotFoundError, OSError) as e:
+                pass
 
     # Export post data
     # TODO sort posts by highest karma
     with open(os.path.join(export_folder, 'export_reddit.json'), 'w') as f:
         json.dump(reddit_posts, f, indent=4)
 
-    # Extract post data and export images
-    # TODO download gifv and webm
-    for post in reddit_posts:
-        try:
-            image_url = post['url']
-            if verbose:
-                print(image_url)
-            
-            domain = post['domain']
-            if domain == 'gfycat.com':
-                image_url = image_url[:8] + 'zippy.' + image_url[8:] + '.webm'
-            if image_url.endswith('gifv'):
-                image_url = image_url[:-4] + 'mp4'
+    # Export post_info
+    with open(os.path.join(export_folder, 'export_reddit.txt'), 'w') as f:
+        f.write(post_info)
 
-            download_image_from_url(image_url, export_folder)
-
-        except (FileNotFoundError, OSError) as e:
-            print("Ignored")
-            pass
 
 
 @click.group()
