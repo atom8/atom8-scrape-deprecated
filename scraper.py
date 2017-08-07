@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import reddit as reddit_control
+import tigsource as tig_control
 import time
 import urllib
 
@@ -21,9 +22,12 @@ def download_image_from_url(url, directory, filename=None):
     x = 0
     while filename in os.listdir(directory):
         x += 1
-        filename = base_filename + x
+        filename = base_filename + str(x)
 
-    urllib.request.urlretrieve(url, os.path.join(directory, filename))
+    try:
+        urllib.request.urlretrieve(url, os.path.join(directory, filename))
+    except (OSError, urllib.error.HTTPError):
+        print('[ERROR] Could not download: ' + url)
 
 
 def get_scraper_settings(settings_filename):
@@ -64,7 +68,7 @@ def get_export_folder(prefix='export'):
 
 
 def scrape_reddit(settings, export_folder, verbose=False):
-    subreddits = settings['subreddits']
+    subreddits = settings['reddit']['subreddits']
 
     # Retrieve reddit posts
     # TODO different date ranges
@@ -118,6 +122,15 @@ def scrape_reddit(settings, export_folder, verbose=False):
         f.write(post_info)
 
 
+def scrape_tigsource(settings, export_folder):
+    topics = settings['tigsource']['topics']
+    
+    images = []
+    for topic in topics:
+        images += tig_control.get_posts_by_date(topic)
+
+    for image_url in images:
+        download_image_from_url(image_url, export_folder)
 
 @click.group()
 def scraper():
@@ -134,6 +147,7 @@ def all():
 
     # perform scrapes
     scrape_reddit(settings, export_folder)
+    scrape_tigsource(settings, export_folder)
 
 
 @scraper.command()
@@ -143,6 +157,15 @@ def reddit():
     settings = get_scraper_settings('settings.json')
 
     scrape_reddit(settings, export_folder)
+
+
+@scraper.command()
+def tigsource():
+    export_folder = get_export_folder(prefix='tigsource')
+    create_folder(export_folder)
+    settings = get_scraper_settings('settings.json')
+
+    scrape_tigsource(settings, export_folder)
 
 
 if __name__ == "__main__":
