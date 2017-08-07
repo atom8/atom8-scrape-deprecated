@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import re
 import lxml.html
 import requests
-import time
 
 
 MAX_POST_CAP = 2**16
@@ -14,7 +13,7 @@ def get_posts_by_date(topic_num, days=7, verbose=False):
     '''
     Retrieve posts from a thread
     '''
-    
+
     # BASE_REQUEST + POST_CAP - 20x
     # Where x is the amount of pages to traverse backwards
     BASE_REQUEST = 'https://forums.tigsource.com/index.php?topic={}.'\
@@ -22,7 +21,6 @@ def get_posts_by_date(topic_num, days=7, verbose=False):
 
     # Use any timezone as long as we use the same when converting post UTC
     expire_date = datetime.now() - timedelta(days=days)
-
 
     # Initial scan
     response = requests.get(BASE_REQUEST + str(MAX_POST_CAP))

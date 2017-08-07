@@ -48,14 +48,17 @@ def create_folder(export_folder):
 
 
 def get_export_folder(prefix='export'):
-    export_directory = click.prompt('Export directory', type=str, default=DESKTOP_IDENTIFIER)
+    export_directory = click.prompt(
+        'Export directory', type=str, default=DESKTOP_IDENTIFIER)
 
     # Find desktop path
     if export_directory == DESKTOP_IDENTIFIER:
         if sys.platform.startswith('win'):
-            export_directory = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+            export_directory = os.path.join(
+                os.path.join(os.environ['USERPROFILE']), 'Desktop')
         elif sys.platform.startswith('linux'):
-            export_directory = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+            export_directory = os.path.join(
+                os.path.join(os.path.expanduser('~')), 'Desktop')
         else:
             # TODO apple
             print("Cannot find desktop, using working directory")
@@ -92,7 +95,7 @@ def scrape_reddit(settings, export_folder, verbose=False):
             try:
                 post_url = post['url']
                 post_domain = post['domain']
-                
+
                 if post_domain == 'gfycat.com':
                     post_url = post_url[:8] + 'zippy.' + post_url[8:] + '.webm'
                 if post_url.endswith('gifv'):
@@ -100,14 +103,14 @@ def scrape_reddit(settings, export_folder, verbose=False):
 
                 _, extension = os.path.splitext(post_url)
                 if extension is not None:
-                    download_image_from_url(post_url, export_folder, 
-                        str(post_num) + extension)
+                    download_image_from_url(post_url, export_folder,
+                                            str(post_num) + extension)
                 else:
                     download_image_from_url(post_url, export_folder)
 
                 post_info += "{:>3}\t{}\n{}\n{}\n\n".format(
-                    post_num, post['author'], 
-                    post['permalink'].encode('utf-8'), 
+                    post_num, post['author'],
+                    post['permalink'].encode('utf-8'),
                     post_url)
             except (FileNotFoundError, OSError) as e:
                 pass
@@ -124,13 +127,16 @@ def scrape_reddit(settings, export_folder, verbose=False):
 
 def scrape_tigsource(settings, export_folder):
     topics = settings['tigsource']['topics']
-    
-    images = []
-    for topic in topics:
-        images += tig_control.get_posts_by_date(topic)
 
-    for image_url in images:
-        download_image_from_url(image_url, export_folder)
+    images = []
+    with click.progressbar(topics, label='Traversing topics') as bar:
+        for topic in bar:
+            images += tig_control.get_posts_by_date(topic)
+
+    with click.progressbar(images, label='Downloading images') as bar:
+        for image_url in bar:
+            download_image_from_url(image_url, export_folder)
+
 
 @click.group()
 def scraper():
@@ -146,8 +152,13 @@ def all():
     settings = get_scraper_settings('settings.json')
 
     # perform scrapes
+    click.secho("\nPerforming Reddit scrape", fg='yellow')
     scrape_reddit(settings, export_folder)
+
+    click.secho("\nPerforming TIGSource scrape", fg='yellow')
     scrape_tigsource(settings, export_folder)
+
+    click.secho("\nTASK COMPLETE!", fg='green')
 
 
 @scraper.command()
