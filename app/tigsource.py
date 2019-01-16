@@ -58,3 +58,18 @@ def get_posts_by_date(topic_num, days=7, verbose=False):
         post_num -= POST_STEP
 
     return images
+
+
+def scrape(settings, export_folder):
+    """Perform tigsource scrape routine."""
+
+    topics = settings['tigsource']['topics']
+
+    images = []
+    with click.progressbar(topics, label='Traversing topics') as bar:
+        for topic in bar:
+            images += tig_control.get_posts_by_date(topic)
+
+    with click.progressbar(images, label='Downloading images') as bar:
+        for image_url in bar:
+            download_image_from_url(image_url, export_folder)
