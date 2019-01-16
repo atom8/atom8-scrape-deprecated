@@ -1,7 +1,10 @@
-# import json
+import click
+import json
+import os
 import requests
 import time
 from datetime import datetime, timedelta
+from . import etc
 
 
 def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
@@ -53,59 +56,80 @@ def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
     return posts
 
 
-def scrape(subreddits, export_folder, verbose=False):
-    """Perform reddit scrape routine."""
-
-    # Retrieve reddit posts
+def get_all_posts_from_subreddits(subreddits):
     # TODO different date ranges
-    reddit_posts = []
-    with click.progressbar(subreddits, label='Scanning subreddits') as bar:
-        for subreddit in bar:
-            subreddit_posts = reddit_control.get_posts_by_date(
-                subreddit=subreddit['name'],
-                min_score=subreddit['min_karma'],
-                days=7,
-            )
-            reddit_posts += subreddit_posts
 
-    # Extract post data and download files
+    posts = []
+    for subreddit in subreddits:
+        subreddit_posts = get_posts_by_date(
+            subreddit=subreddit['name'],
+            min_score=subreddit['min_karma'],
+            days=7,
+        )
+        posts += subreddit_posts
+    return posts
+
+
+def download_images(posts, export_directory):
     post_num = 0
     post_info = ''
 
-    with click.progressbar(reddit_posts, label='Downloading posts') as bar:
-        for post in bar:
-            post_num += 1
-            try:
-                post_url = post['url']
-                post_domain = post['domain']
+    for post in posts:
+        post_num += 1
+        try:
+            post_url = post['url']
+            post_domain = post['domain']
 
-                if post_domain == 'gfycat.com':
-                    post_url = post_url[:8] + 'zippy.' + post_url[8:] + '.webm'
-                if post_url.endswith('gifv'):
-                    post_url = post_url[:-4] + 'mp4'
+            if post_domain == 'gfycat.com':
+                post_url = post_url[:8] + 'zippy.' + post_url[8:] + '.webm'
+            if post_url.endswith('gifv'):
+                post_url = post_url[:-4] + 'mp4'
 
-                _, extension = os.path.splitext(post_url)
-                if extension is not None:
-                    download_image_from_url(post_url, export_folder,
+            _, extension = os.path.splitext(post_url)
+            if extension is not None:
+                etc.download_image_from_url(post_url, export_directory,
                                             str(post_num) + extension)
-                else:
-                    download_image_from_url(post_url, export_folder)
+            else:
+                etc.download_image_from_url(post_url, export_directory)
 
-                post_info += "{:>3}\t{}\n{}\n{}\n\n".format(
-                    post_num, post['author'],
-                    post['permalink'].encode('utf-8'),
-                    post_url)
-            except (FileNotFoundError, OSError) as e:
-                pass
+            post_info += "{:>3}\t{}\n{}\n{}\n\n".format(
+                post_num, post['author'],
+                post['permalink'].encode('utf-8'),
+                post_url)
+        except (FileNotFoundError, OSError):
+            pass
+
+    return post_info
+
+
+def scrape(subreddits, export_directory, verbose=False):
+    """Perform reddit scrape routine."""
+
+    # Retrieve reddit posts
+    reddit_posts = []
+    if verbose:
+        with click.progressbar(subreddits, label='Scanning subreddits') as bar:
+            get_all_posts_from_subreddits(bar)
+    else:
+        get_all_posts_from_subreddits(subreddits)
+
+    # Extract post data and download files
+    post_results = ''
+
+    if verbose:
+        with click.progressbar(reddit_posts, label='Downloading posts') as bar:
+            post_results = download_images(reddit_posts, export_directory)
+    else:
+        post_results = download_images(reddit_posts, export_directory)
 
     # Export post data
     # TODO sort posts by highest karma
-    with open(os.path.join(export_folder, 'export_reddit.json'), 'w') as f:
+    with open(os.path.join(export_directory, 'export_reddit.json'), 'w') as f:
         json.dump(reddit_posts, f, indent=4)
 
-    # Export post_info
-    with open(os.path.join(export_folder, 'export_reddit.txt'), 'w') as f:
-        f.write(post_info)
+    # Export post_results
+    with open(os.path.join(export_directory, 'export_reddit.txt'), 'w') as f:
+        f.write(post_results)
 
 
 def trim_posts_under_score(posts, thresh):

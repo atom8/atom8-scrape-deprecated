@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import urllib
@@ -6,13 +7,13 @@ import urllib
 SETTINGS = None
 
 
-def create_folder(folder_path):
-    """Creates a folder."""
+def create_directory(directory_path):
+    """Creates a directory."""
     try:
-        os.makedirs(folder_path, exist_ok=False)
+        os.makedirs(directory_path, exist_ok=False)
     except OSError:
-        if (os.listdir(folder_path)):
-            print('[ERROR] Folder already exists: %s.' % (folder_path))
+        if (os.listdir(directory_path)):
+            print('[ERROR] Folder already exists: %s.' % (directory_path))
 
 
 def download_image_from_url(url, directory, filename=None):
@@ -43,7 +44,6 @@ def download_image_from_url(url, directory, filename=None):
         print('[ERROR] Could not download: ' + url)
 
 
-
 def find_desktop():
     # Find desktop path
 
@@ -55,7 +55,6 @@ def find_desktop():
         # TODO apple
         print("Cannot find desktop, returning working directory")
         return os.getcwd()
-
 
 
 def get_scraper_settings(settings_filename):

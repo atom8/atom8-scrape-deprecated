@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta
+import click
 import re
 import lxml.html
 import requests
+from datetime import datetime, timedelta
+from . import etc
 
 
 MAX_POST_CAP = 2**16
@@ -60,16 +62,27 @@ def get_posts_by_date(topic_num, days=7, verbose=False):
     return images
 
 
-def scrape(settings, export_folder):
+def scrape(topics, export_folder, verbose=False):
     """Perform tigsource scrape routine."""
 
-    topics = settings['tigsource']['topics']
+    def get_topic_images(t):
+        out = []
+        for topic in t:
+            out += get_posts_by_date(topic)
+        return out
+
+    def download_images(d):
+        for image_url in d:
+            etc.download_image_from_url(image_url, export_folder)
 
     images = []
-    with click.progressbar(topics, label='Traversing topics') as bar:
-        for topic in bar:
-            images += tig_control.get_posts_by_date(topic)
+    if verbose:
+        with click.progressbar(topics, label='Traversing topics') as bar:
+            images = get_topic_images(bar)
 
-    with click.progressbar(images, label='Downloading images') as bar:
-        for image_url in bar:
-            download_image_from_url(image_url, export_folder)
+        with click.progressbar(images, label='Downloading images') as bar:
+            download_images(bar)
+
+    else:
+        images = get_topic_images(topics)
+        download_images(images)
