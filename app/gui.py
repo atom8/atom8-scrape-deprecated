@@ -97,6 +97,7 @@ class MainApplication(tk.Frame):
 
 def run_app():
     root = tk.Tk()
+    root.title('GDI Scraper')
     # root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
 
     MainApplication(root).pack(side="top", fill="both", expand=True)
