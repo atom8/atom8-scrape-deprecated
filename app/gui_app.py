@@ -179,6 +179,7 @@ class MainApplication(tk.Frame):
 
 
 class StdoutRedirector(object):
+    '''Redirect all print statements to a textarea. Used by MainApplication.'''
     def __init__(self, text_widget):
         self.text_space = text_widget
 
@@ -192,8 +193,16 @@ def run_app():
     root.title('GDI Scraper')
     root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
 
+    # Change back stdout from MainApplication output before exiting program
+    def on_closing():
+        sys.stdout = sys.__stdout__
+        root.destroy()
+    root.protocol('WM_DELETE_WINDOW', on_closing)
+
+    # Create main application frame. Remainder of view logic is inside here.
     MainApplication(root).pack(side="top", fill="both", expand=True)
 
-    # start ScrapeThread
+    # scraper thread is started automatically through wrapper.
     ScrapeThreadWrapper()
+
     root.mainloop()
