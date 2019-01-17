@@ -95,7 +95,7 @@ class MainApplication(tk.Frame):
         b.grid(row=1, column=0)
 
 
-if __name__ == '__main__':
+def run_app():
     root = tk.Tk()
     # root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
 
