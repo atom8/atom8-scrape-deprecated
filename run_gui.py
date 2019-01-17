@@ -14,7 +14,7 @@ class MainApplication(tk.Frame):
 
         # Left division
         left_frame = tk.Frame(self)
-        left_frame.pack(side='left', fill='both')
+        left_frame.pack(side='left', fill='both', padx=10, pady=10)
 
         # Export destinaction
         export_frame = tk.Frame(left_frame)
@@ -36,16 +36,30 @@ class MainApplication(tk.Frame):
         out_scroll.pack(side='right', fill=tk.Y)
 
         # Right division
-        right_frame = tk.Frame(self)
-        right_frame.pack(side='right', fill='both')
+        right_frame = tk.Frame(self, borderwidth=2, relief="groove")
+        right_frame.pack(side='right', fill='both', padx=10, pady=10)
 
         # Reddit
-        reddit_label = tk.Label(right_frame, text='Reddit')
+        reddit_frame = tk.Frame(right_frame)
+        reddit_frame.pack()
+        reddit_label = tk.Label(reddit_frame, text='Reddit')
         reddit_label.pack()
+        self.reddit_status_label = tk.Label(reddit_frame, text='Status: disabled')
+        self.reddit_status_label.pack()
+        open_reddit_settings_btn = tk.Button(reddit_frame, text='config')
+        open_reddit_settings_btn.config(command=self.open_reddit_settings)
+        open_reddit_settings_btn.pack()
 
         # TIGsource
-        TIG_label = tk.Label(right_frame, text='TIGsource')
+        TIG_frame = tk.Frame(right_frame)
+        TIG_frame.pack()
+        TIG_label = tk.Label(TIG_frame, text='TIGsource')
         TIG_label.pack()
+        self.TIG_status_label = tk.Label(TIG_frame, text='Status: disabled')
+        self.TIG_status_label.pack()
+        open_TIG_settings_btn = tk.Button(TIG_frame, text='config')
+        open_TIG_settings_btn.config(command=self.open_TIG_settings)
+        open_TIG_settings_btn.pack()
 
         # Perform scape
         perform_btn = tk.Button(right_frame, text='PERFORM SCRAPE')
@@ -59,7 +73,26 @@ class MainApplication(tk.Frame):
                            destination_folder)
 
     def do_perform_scrape(self):
-        self.output.insert(tk.END, '*** BEGINNING SCRAPE ***')
+        self.output.insert(tk.END, '*** SCRAPE STARTED ***\n')
+        self.output.insert(tk.END, '*** SCRAPE COMPLETED ***\n')
+
+    def open_reddit_settings(self):
+        win = tk.Toplevel()
+        win.wm_title("Reddit settings")
+
+        tk.Label(win, text="Subreddits").grid(row=0, column=0)
+
+        b = tk.Button(win, text="Okay", command=win.destroy)
+        b.grid(row=1, column=0)
+
+    def open_TIG_settings(self):
+        win = tk.Toplevel()
+        win.wm_title("Reddit settings")
+
+        tk.Label(win, text="Topics").grid(row=0, column=0)
+
+        b = tk.Button(win, text="Okay", command=win.destroy)
+        b.grid(row=1, column=0)
 
 
 if __name__ == '__main__':
