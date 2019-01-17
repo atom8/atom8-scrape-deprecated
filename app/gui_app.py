@@ -68,6 +68,7 @@ def perform_scrape(export_directory):
 
     return 0
 
+
 class MainApplication(tk.Frame):
 
     def __init__(self, parent, *args, **kwargs):
@@ -78,7 +79,8 @@ class MainApplication(tk.Frame):
 
         # Left division
         left_frame = tk.Frame(self)
-        left_frame.pack(side='left', fill='both', padx=10, pady=10)
+        left_frame.pack(side='left', padx=10, pady=10, 
+                        fill=tk.BOTH, expand=True)
 
         # Export destinaction
         export_frame = tk.Frame(left_frame)
@@ -90,10 +92,13 @@ class MainApplication(tk.Frame):
 
         # Output diag
         output_frame = tk.Frame(left_frame)
-        output_frame.pack(side='bottom', padx=10, pady=10)
+        output_frame.pack(side='bottom', padx=10, pady=10,
+                          fill=tk.BOTH, expand=True)
+
+        tk.Label(output_frame, text='Output').pack(fill=tk.X)
         self.output = tk.Text(output_frame, height=10, width=40)
         self.output.insert(tk.END, 'Welcome to GDI scrape\n')
-        self.output.pack(side='left', fill=tk.Y)
+        self.output.pack(side='left', fill=tk.BOTH, expand=True)
         out_scroll = tk.Scrollbar(output_frame)
         out_scroll.config(command=self.output.yview)
         self.output.config(yscrollcommand=out_scroll.set)
@@ -185,7 +190,7 @@ class StdoutRedirector(object):
 def run_app():
     root = tk.Tk()
     root.title('GDI Scraper')
-    # root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
+    root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
 
     MainApplication(root).pack(side="top", fill="both", expand=True)
 
