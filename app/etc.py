@@ -1,10 +1,19 @@
+import datetime
 import json
 import os
 import sys
 import urllib
+import time
 
 
 SETTINGS = None
+
+
+def timestamp_directory(directory_path, prefix='export'):
+    """Returns a timestamped directory path."""
+    t = time.time()
+    timestamp = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d_%H%M%S')
+    return os.path.join(directory_path, prefix + timestamp)
 
 
 def create_directory(directory_path):
@@ -14,6 +23,7 @@ def create_directory(directory_path):
     except OSError:
         if (os.listdir(directory_path)):
             print('[ERROR] Folder already exists: %s.' % (directory_path))
+            raise OSError('Folder already exists')
 
 
 def download_image_from_url(url, directory, filename=None):

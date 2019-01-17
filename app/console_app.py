@@ -6,9 +6,6 @@ queue.
 """
 
 import click
-import datetime
-import os
-import time
 
 from . import etc
 from . import reddit as reddit_control
@@ -27,15 +24,7 @@ def determine_export_destination(prefix='export'):
     else:
         export_directory_path = requested_export_directory_path
 
-    # get current time
-    t = time.time()
-    timestamp = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d_%H%M%S')
-
-    # directory name = prefix + the current time
-    export_directory = os.path.join(
-        export_directory_path, 'export' + timestamp)
-
-    return export_directory
+    return etc.timestamp_directory(export_directory_path)
 
 
 @click.group()

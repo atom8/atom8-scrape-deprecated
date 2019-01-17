@@ -1,6 +1,12 @@
+import sys
+import time
+
 import tkinter as tk
 from tkinter import filedialog
 
+from . import etc
+from . import reddit as reddit_control
+from . import tigsource as tigsource_control
 
 APP_WIDTH = 960
 APP_HEIGHT = 640
@@ -11,6 +17,8 @@ class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs),
         self.parent = parent
+
+        self.export_directory = None
 
         # Left division
         left_frame = tk.Frame(self)
@@ -66,15 +74,50 @@ class MainApplication(tk.Frame):
         perform_btn.config(command=self.do_perform_scrape)
         perform_btn.pack(side='bottom', padx=10, pady=10)
 
+        # Set sysout to output_textbox
+        sys.stdout = StdoutRedirector(self.output)
+        print('test')
+
     def do_change_destination_folder(self):
         destination_folder = filedialog.askdirectory()
+
+        self.export_directory = destination_folder
+
         self.export_label.config(text='Export to: ' + destination_folder)
-        self.output.insert(tk.END, 'Export folder changed ~ %s\n' %
-                           destination_folder)
+        self.print_message('Export folder changed ~ %s' % destination_folder)
 
     def do_perform_scrape(self):
-        self.output.insert(tk.END, '*** SCRAPE STARTED ***\n')
-        self.output.insert(tk.END, '*** SCRAPE COMPLETED ***\n')
+        if self.export_directory is None:
+            self.print_message('[ERROR] ~ specify an export directory')
+            return
+
+        self.print_message('*** SCRAPE STARTED ***')
+
+        timestamped_export_dir = etc.timestamp_directory(self.export_directory)
+
+        # Create export directory
+        try:
+            etc.create_directory(timestamped_export_dir)
+            self.print_message('Export directory created @ %s' %
+                               timestamped_export_dir)
+        except OSError:
+            return
+
+        settings = etc.get_scraper_settings('settings.json')
+
+        # TODO if reddit enable
+        self.print_message('Performing Reddit scrape')
+        reddit_control.scrape(
+            settings['reddit']['subreddits'], timestamped_export_dir,
+            verbose=True)
+
+        # TODO if TIG enable
+        self.print_message('Performing TIGsource scrape')
+        # tigsource_control.scrape(
+        #     settings['tigsource']['topics'], timestamped_export_dir, 
+        #     verbose=True)
+
+        self.print_message('*** SCRAPE COMPLETED ***')
 
     def open_reddit_settings(self):
         win = tk.Toplevel()
@@ -93,6 +136,19 @@ class MainApplication(tk.Frame):
 
         b = tk.Button(win, text="Okay", command=win.destroy)
         b.grid(row=1, column=0)
+
+    def print_message(self, message):
+        self.output.insert(tk.END, message + '\n')
+        self.output.update()
+
+
+class StdoutRedirector(object):
+    def __init__(self, text_widget):
+        self.text_space = text_widget
+
+    def write(self, string):
+        self.text_space.insert(tk.END, string)
+        self.text_space.update()
 
 
 def run_app():

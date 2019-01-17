@@ -7,6 +7,16 @@ from datetime import datetime, timedelta
 from . import etc
 
 
+def verbose_iter(lst, message):
+    tot_length = len(lst)
+    curr = 0
+
+    for item in lst:
+        curr += 1
+        print("%s (%d/%d)" % (message, curr, tot_length))
+        yield item
+
+
 def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
     '''
     Retrieve posts from a subreddit
@@ -108,17 +118,18 @@ def scrape(subreddits, export_directory, verbose=False):
     # Retrieve reddit posts
     reddit_posts = []
     if verbose:
-        with click.progressbar(subreddits, label='Scanning subreddits') as bar:
-            get_all_posts_from_subreddits(bar)
+        reddit_posts = get_all_posts_from_subreddits(
+            verbose_iter(subreddits, 'Scanning subreddits'))
     else:
-        get_all_posts_from_subreddits(subreddits)
+        reddit_posts = get_all_posts_from_subreddits(subreddits)
 
     # Extract post data and download files
     post_results = ''
 
     if verbose:
-        with click.progressbar(reddit_posts, label='Downloading posts') as bar:
-            post_results = download_images(reddit_posts, export_directory)
+        post_results = download_images(
+            verbose_iter(reddit_posts, 'Downloading reddit images'),
+            export_directory)
     else:
         post_results = download_images(reddit_posts, export_directory)
 
