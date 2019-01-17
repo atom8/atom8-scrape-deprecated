@@ -9,13 +9,6 @@ import time
 SETTINGS = None
 
 
-def timestamp_directory(directory_path, prefix='export'):
-    """Returns a timestamped directory path."""
-    t = time.time()
-    timestamp = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d_%H%M%S')
-    return os.path.join(directory_path, prefix + timestamp)
-
-
 def create_directory(directory_path):
     """Creates a directory."""
     try:
@@ -86,5 +79,22 @@ def get_scraper_settings(settings_filename):
     if SETTINGS is None:
         with open(settings_filename) as settings_file:
             SETTINGS = json.load(settings_file)
-            
+
     return SETTINGS
+
+
+def timestamp_directory(directory_path, prefix='export'):
+    """Returns a timestamped directory path."""
+    t = time.time()
+    timestamp = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d_%H%M%S')
+    return os.path.join(directory_path, prefix + timestamp)
+
+
+def verbose_iter(lst, message):
+    tot_length = len(lst)
+    curr = 0
+
+    for item in lst:
+        curr += 1
+        print("%s (%d/%d)" % (message, curr, tot_length))
+        yield item

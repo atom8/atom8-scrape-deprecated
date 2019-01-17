@@ -1,4 +1,3 @@
-import click
 import re
 import lxml.html
 import requests
@@ -9,6 +8,11 @@ from . import etc
 MAX_POST_CAP = 2**16
 POST_STEP = 20
 DATE_REGEXP = re.compile(r'[A-Za-z]{3,9} [0-9]{1,2}, [0-9]{4}')
+
+
+def download_images(d, export_folder):
+    for image_url in d:
+        etc.download_image_from_url(image_url, export_folder)
 
 
 def get_posts_by_date(topic_num, days=7, verbose=False):
@@ -62,27 +66,23 @@ def get_posts_by_date(topic_num, days=7, verbose=False):
     return images
 
 
-def scrape(topics, export_folder, verbose=False):
+def get_topic_images(t):
+    out = []
+    for topic in t:
+        out += get_posts_by_date(topic)
+    return out
+
+
+def scrape(topics, export_directory, verbose=False):
     """Perform tigsource scrape routine."""
-
-    def get_topic_images(t):
-        out = []
-        for topic in t:
-            out += get_posts_by_date(topic)
-        return out
-
-    def download_images(d):
-        for image_url in d:
-            etc.download_image_from_url(image_url, export_folder)
 
     images = []
     if verbose:
-        with click.progressbar(topics, label='Traversing topics') as bar:
-            images = get_topic_images(bar)
-
-        with click.progressbar(images, label='Downloading images') as bar:
-            download_images(bar)
-
+        images = get_topic_images(
+            etc.verbose_iter(topics, 'Scanning TIGforum topics'))
+        download_images(
+            etc.verbose_iter(images, 'Download TIGforum images'),
+            export_directory)
     else:
         images = get_topic_images(topics)
-        download_images(images)
+        download_images(images, export_directory)
