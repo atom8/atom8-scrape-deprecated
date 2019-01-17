@@ -156,22 +156,103 @@ class MainApplication(tk.Frame):
         self.print_message("scrape requested")
 
     def open_reddit_settings(self):
-        win = tk.Toplevel()
-        win.wm_title("Reddit settings")
+        # TODO backup settings
+        # maximum of 100 subs
 
-        tk.Label(win, text="Subreddits").grid(row=0, column=0)
+        settings = tk.Toplevel()
+        settings.wm_title("Reddit settings")
+        settings.geometry('320x240')
 
-        b = tk.Button(win, text="Okay", command=win.destroy)
-        b.grid(row=1, column=0)
+        tk.Label(settings, text="Subreddits").pack()
+
+        mock_subs = [
+            {
+                'name': 'a',
+                'min_karma': 100,
+            },
+            {
+                'name': 'b',
+                'min_karma': 100,
+            },
+            {
+                'name': 'c',
+                'min_karma': 100,
+            }
+        ]
+
+        # Add subreddit editting frame
+        subs_frame = tk.Frame(settings)
+        subs_frame.pack()
+
+        # A list containing references to each entry. Each entry is a tuple.
+        sub_entries = []
+
+        sr = 0
+        for sub in mock_subs:
+            name = tk.Entry(subs_frame)
+            name.insert(0, sub['name'])
+            name.grid(row=sr, column=0)
+
+            min_karma = tk.Entry(subs_frame)
+            min_karma.insert(0, sub['min_karma'])
+            min_karma.grid(row=sr, column=1)
+
+            sub_entries.append((name, min_karma))
+            sr += 1
+
+        # functionality for Add button
+        def add_subreddit():
+            nonlocal sub_entries
+
+            # row index to insert into
+            row = len(sub_entries)
+
+            # name doesnt matter because theres nothing in there.
+            a = tk.Entry(subs_frame)
+            b = tk.Entry(subs_frame)
+            a.grid(row=row, column=0)
+            b.grid(row=row, column=1)
+            sub_entries.append((a, b))
+
+        # functionality for Delete button
+        def delete_subreddit():
+            pass
+
+        # Add manip buttons TO subreddit edit frame
+        edit_buttons = tk.Frame(settings)
+        edit_buttons.pack()
+        add_btn = tk.Button(edit_buttons, text='Add', command=add_subreddit)
+        add_btn.grid(row=100, column=0)
+        delete_btn = tk.Button(edit_buttons, text='Delete')
+        delete_btn.grid(row=100, column=1)
+
+        # Apply Button functionality
+        def apply_settings():
+            '''save settings to settings.json'''
+            pass
+
+        # Add edit buttons
+        exit_buttons = tk.Frame(settings)
+        exit_buttons.pack(side='bottom')
+        apply_btn = tk.Button(exit_buttons, text="Apply",
+                              command=settings.destroy)
+        apply_btn.grid(row=0, column=0)
+        cancel_btn = tk.Button(exit_buttons, text='Cancel',
+                               command=settings.destroy)
+        cancel_btn.grid(row=0, column=1)
 
     def open_TIG_settings(self):
         win = tk.Toplevel()
-        win.wm_title("Reddit settings")
+        win.wm_title("TIG settings")
 
-        tk.Label(win, text="Topics").grid(row=0, column=0)
+        tk.Label(win, text="Topics").pack()
 
-        b = tk.Button(win, text="Okay", command=win.destroy)
-        b.grid(row=1, column=0)
+        exit_buttons = tk.Frame(win)
+        exit_buttons.pack(side='bottom')
+        apply_btn = tk.Button(exit_buttons, text="Apply", command=win.destroy)
+        apply_btn.grid(row=1, column=0)
+        cancel_btn = tk.Button(exit_buttons, text='Cancel', command=win.destroy)
+        cancel_btn.grid(row=1, column=1)
 
     def print_message(self, message):
         self.output.insert(tk.END, message + '\n')
