@@ -1,5 +1,6 @@
 import sys
 import time
+import threading
 
 import tkinter as tk
 from tkinter import filedialog
@@ -10,6 +11,60 @@ from . import tigsource as tigsource_control
 
 APP_WIDTH = 960
 APP_HEIGHT = 640
+
+EXPORT_DIRECTORY = None
+REQUEST_SCRAPE = False
+
+
+class ScrapeThreadWrapper():
+    def __init__(self):
+        self.scraper_thread = threading.Thread(target=self.run, args=())
+        self.scraper_thread.daemon = True
+        self.scraper_thread.start()
+
+    def run(self):
+        global REQUEST_SCRAPE
+
+        while True:
+            if REQUEST_SCRAPE:
+                REQUEST_SCRAPE = False
+                perform_scrape(EXPORT_DIRECTORY)
+
+            time.sleep(1)
+
+
+def perform_scrape(export_directory):
+    if export_directory is None:
+        print('[ERROR] ~ specify an export directory')
+        return
+
+    print('*** SCRAPE STARTED ***')
+
+    timestamped_export_dir = etc.timestamp_directory(export_directory)
+
+    # Create export directory
+    try:
+        etc.create_directory(timestamped_export_dir)
+        print('Export directory created @ %s' %
+              timestamped_export_dir)
+    except OSError:
+        return
+
+    settings = etc.get_scraper_settings('settings.json')
+
+    # TODO if reddit enable
+    print('Performing Reddit scrape')
+    reddit_control.scrape(
+        settings['reddit']['subreddits'], timestamped_export_dir,
+        verbose=True)
+
+    # TODO if TIG enable
+    print('Performing TIGsource scrape')
+    # tigsource_control.scrape(
+    #     settings['tigsource']['topics'], timestamped_export_dir, 
+    #     verbose=True)
+
+    print('*** SCRAPE COMPLETED ***')
 
 
 class MainApplication(tk.Frame):
@@ -71,12 +126,11 @@ class MainApplication(tk.Frame):
 
         # Perform scape
         perform_btn = tk.Button(right_frame, text='PERFORM SCRAPE')
-        perform_btn.config(command=self.do_perform_scrape)
+        perform_btn.config(command=self.request_scrape)
         perform_btn.pack(side='bottom', padx=10, pady=10)
 
         # Set sysout to output_textbox
         sys.stdout = StdoutRedirector(self.output)
-        print('test')
 
     def do_change_destination_folder(self):
         destination_folder = filedialog.askdirectory()
@@ -86,38 +140,47 @@ class MainApplication(tk.Frame):
         self.export_label.config(text='Export to: ' + destination_folder)
         self.print_message('Export folder changed ~ %s' % destination_folder)
 
-    def do_perform_scrape(self):
-        if self.export_directory is None:
-            self.print_message('[ERROR] ~ specify an export directory')
-            return
+    def request_scrape(self):
+        global EXPORT_DIRECTORY
+        global REQUEST_SCRAPE
 
-        self.print_message('*** SCRAPE STARTED ***')
+        EXPORT_DIRECTORY = self.export_directory
+        REQUEST_SCRAPE = True
 
-        timestamped_export_dir = etc.timestamp_directory(self.export_directory)
+        self.print_message("scrape requested")
 
-        # Create export directory
-        try:
-            etc.create_directory(timestamped_export_dir)
-            self.print_message('Export directory created @ %s' %
-                               timestamped_export_dir)
-        except OSError:
-            return
+    # def _perform_scrape(self):
+    #     if self.export_directory is None:
+    #         self.print_message('[ERROR] ~ specify an export directory')
+    #         return
 
-        settings = etc.get_scraper_settings('settings.json')
+    #     self.print_message('*** SCRAPE STARTED ***')
 
-        # TODO if reddit enable
-        self.print_message('Performing Reddit scrape')
-        reddit_control.scrape(
-            settings['reddit']['subreddits'], timestamped_export_dir,
-            verbose=True)
+    #     timestamped_export_dir = etc.timestamp_directory(self.export_directory)
 
-        # TODO if TIG enable
-        self.print_message('Performing TIGsource scrape')
-        # tigsource_control.scrape(
-        #     settings['tigsource']['topics'], timestamped_export_dir, 
-        #     verbose=True)
+    #     # Create export directory
+    #     try:
+    #         etc.create_directory(timestamped_export_dir)
+    #         self.print_message('Export directory created @ %s' %
+    #                            timestamped_export_dir)
+    #     except OSError:
+    #         return
 
-        self.print_message('*** SCRAPE COMPLETED ***')
+    #     settings = etc.get_scraper_settings('settings.json')
+
+    #     # TODO if reddit enable
+    #     self.print_message('Performing Reddit scrape')
+    #     reddit_control.scrape(
+    #         settings['reddit']['subreddits'], timestamped_export_dir,
+    #         verbose=True)
+
+    #     # TODO if TIG enable
+    #     self.print_message('Performing TIGsource scrape')
+    #     # tigsource_control.scrape(
+    #     #     settings['tigsource']['topics'], timestamped_export_dir, 
+    #     #     verbose=True)
+
+    #     self.print_message('*** SCRAPE COMPLETED ***')
 
     def open_reddit_settings(self):
         win = tk.Toplevel()
@@ -157,4 +220,7 @@ def run_app():
     # root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
 
     MainApplication(root).pack(side="top", fill="both", expand=True)
+
+    # start ScrapeThread
+    ScrapeThreadWrapper()
     root.mainloop()
