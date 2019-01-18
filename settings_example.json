@@ -1,0 +1,36 @@
+{
+    "reddit": 
+    {
+        "subreddits":
+        [
+            {
+                "name": "PixelArt",
+                "min_karma": 100
+            },
+            {
+                "name": "Art",
+                "min_karma": 500
+            },
+            {
+                "name": "IndieGaming",
+                "min_karma": 50
+            }
+        ]
+    },
+    
+    "tigsource":
+    {
+        "topics": ["167", "632", "3993", "4960", "7091", "24094", "32077"]
+    },
+
+    "tumblr":
+    {
+        "tags":
+        [
+            {
+                "tag": "PixelArt",
+                "min_notes": 100
+            }
+        ]
+    }
+}

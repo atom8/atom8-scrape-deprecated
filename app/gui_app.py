@@ -16,6 +16,10 @@ EXPORT_DIRECTORY = None
 REQUEST_SCRAPE = False
 
 
+def get_settings():
+    return etc.get_scraper_settings(etc.DEFAULT_SETTINGS_PATH)
+
+
 class ScrapeThreadWrapper():
     def __init__(self):
         self.scraper_thread = threading.Thread(target=self.run, args=())
@@ -52,7 +56,7 @@ def perform_scrape(export_directory):
     except OSError:
         return
 
-    settings = etc.get_scraper_settings('settings.json')
+    settings = get_settings()
 
     # TODO if reddit enable
     print('Performing Reddit scrape')
@@ -159,36 +163,26 @@ class MainApplication(tk.Frame):
         # TODO backup settings
         # maximum of 100 subs
 
+        app_settings = get_settings()
+
         settings = tk.Toplevel()
         settings.wm_title("Reddit settings")
         settings.geometry('320x240')
 
         tk.Label(settings, text="Subreddits").pack()
 
-        mock_subs = [
-            {
-                'name': 'a',
-                'min_karma': 100,
-            },
-            {
-                'name': 'b',
-                'min_karma': 100,
-            },
-            {
-                'name': 'c',
-                'min_karma': 100,
-            }
-        ]
-
         # Add subreddit editting frame
         subs_frame = tk.Frame(settings)
         subs_frame.pack()
+
+        # get data from app settings
+        sub_data = app_settings['reddit']['subreddits']
 
         # A list containing references to each entry. Each entry is a tuple.
         sub_entries = []
 
         sr = 0
-        for sub in mock_subs:
+        for sub in sub_data:
             name = tk.Entry(subs_frame)
             name.insert(0, sub['name'])
             name.grid(row=sr, column=0)
@@ -223,19 +217,33 @@ class MainApplication(tk.Frame):
         edit_buttons.pack()
         add_btn = tk.Button(edit_buttons, text='Add', command=add_subreddit)
         add_btn.grid(row=100, column=0)
-        delete_btn = tk.Button(edit_buttons, text='Delete')
-        delete_btn.grid(row=100, column=1)
+        # delete_btn = tk.Button(edit_buttons, text='Delete')
+        # delete_btn.grid(row=100, column=1)
 
         # Apply Button functionality
         def apply_settings():
             '''save settings to settings.json'''
-            pass
+            nonlocal app_settings
+
+            # TODO validate
+
+            subs = []
+            for se_name, se_karma in sub_entries:
+                if se_name.get().strip():
+                    subs.append(
+                        {'name': se_name.get(), 'min_karma': se_karma.get()}
+                    )
+
+            app_settings['reddit']['subreddits'] = subs
+            etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+
+            settings.destroy()
 
         # Add edit buttons
         exit_buttons = tk.Frame(settings)
         exit_buttons.pack(side='bottom')
         apply_btn = tk.Button(exit_buttons, text="Apply",
-                              command=settings.destroy)
+                              command=apply_settings)
         apply_btn.grid(row=0, column=0)
         cancel_btn = tk.Button(exit_buttons, text='Cancel',
                                command=settings.destroy)

@@ -8,6 +8,10 @@ import time
 
 SETTINGS = None
 
+# ./../settings.json
+DEFAULT_SETTINGS_PATH = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), '../settings.json')
+
 
 def create_directory(directory_path):
     """Creates a directory."""
@@ -47,6 +51,11 @@ def download_image_from_url(url, directory, filename=None):
         print('[ERROR] Could not download: ' + url)
 
 
+def export_settings(export_destination, settings_dict):
+    with open(export_destination, 'w') as f:
+        json.dump(settings_dict, f, indent=4)
+
+
 def find_desktop():
     # Find desktop path
 
@@ -81,6 +90,12 @@ def get_scraper_settings(settings_filename):
             SETTINGS = json.load(settings_file)
 
     return SETTINGS
+
+
+def refresh_scraper_settings(settings_filename):
+    global SETTINGS
+    with open(settings_filename) as settings_file:
+        SETTINGS = json.load(settings_file)
 
 
 def timestamp_directory(directory_path, prefix='export'):
