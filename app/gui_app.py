@@ -117,7 +117,7 @@ class MainApplication(tk.Frame):
         reddit_frame.pack()
         reddit_label = tk.Label(reddit_frame, text='Reddit')
         reddit_label.pack()
-        self.reddit_status_label = tk.Label(reddit_frame, text='Status: disabled')
+        self.reddit_status_label = tk.Label(reddit_frame, text='Status: on')
         self.reddit_status_label.pack()
         open_reddit_settings_btn = tk.Button(reddit_frame, text='config')
         open_reddit_settings_btn.config(command=self.open_reddit_settings)
@@ -128,7 +128,7 @@ class MainApplication(tk.Frame):
         TIG_frame.pack()
         TIG_label = tk.Label(TIG_frame, text='TIGsource')
         TIG_label.pack()
-        self.TIG_status_label = tk.Label(TIG_frame, text='Status: disabled')
+        self.TIG_status_label = tk.Label(TIG_frame, text='Status: on')
         self.TIG_status_label.pack()
         open_TIG_settings_btn = tk.Button(TIG_frame, text='config')
         open_TIG_settings_btn.config(command=self.open_TIG_settings)
@@ -250,17 +250,75 @@ class MainApplication(tk.Frame):
         cancel_btn.grid(row=0, column=1)
 
     def open_TIG_settings(self):
-        win = tk.Toplevel()
-        win.wm_title("TIG settings")
 
-        tk.Label(win, text="Topics").pack()
+        app_settings = get_settings()
 
-        exit_buttons = tk.Frame(win)
+        diag = tk.Toplevel()
+        diag.wm_title("TIG settings")
+
+        tk.Label(diag, text="Topics").pack()
+
+        # Add topic editting frame
+        topics_frame = tk.Frame(diag)
+        topics_frame.pack()
+
+        # get "topics" from app settings
+        topics_data = app_settings['tigsource']['topics']
+
+        # A list containing references to each entry.
+        topic_entries = []
+        row_x = 0
+        for topic_no in topics_data:
+            topic_entry = tk.Entry(topics_frame)
+            topic_entry.insert(0, topic_no)
+            topic_entry.grid(row=row_x, column=0)
+            topic_entries.append(topic_entry)
+            row_x += 1
+
+        # add topic
+        def add_topic():
+            nonlocal topic_entries
+
+            # row index to insert into
+            row = len(topic_entries)
+
+            pending = tk.Entry(topics_frame)
+            pending.grid(row=row, column=0)
+            topic_entries.append(pending)
+
+        # remove topic
+        def remove_topic():
+            pass
+
+        # Manip buttons
+        edit_buttons = tk.Frame(diag)
+        edit_buttons.pack()
+        add_btn = tk.Button(edit_buttons, text='Add', command=add_topic)
+        add_btn.grid(row=100, column=0)
+
+        # Apply settings
+        def apply_settings():
+            nonlocal app_settings
+
+            topics = []
+            for topic_entry in topic_entries:
+                if topic_entry.get().strip():
+                    topics.append(int(topic_entry.get()))
+
+            app_settings['tigsource']['topics'] = topics
+            etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+
+            diag.destroy()
+
+        # Add final buttons
+        exit_buttons = tk.Frame(diag)
         exit_buttons.pack(side='bottom')
-        apply_btn = tk.Button(exit_buttons, text="Apply", command=win.destroy)
-        apply_btn.grid(row=1, column=0)
-        cancel_btn = tk.Button(exit_buttons, text='Cancel', command=win.destroy)
-        cancel_btn.grid(row=1, column=1)
+        apply_btn = tk.Button(exit_buttons, text="Apply",
+                              command=diag.destroy)
+        apply_btn.grid(row=0, column=0)
+        cancel_btn = tk.Button(exit_buttons, text='Cancel',
+                               command=diag.destroy)
+        cancel_btn.grid(row=0, column=1)
 
     def print_message(self, message):
         self.output.insert(tk.END, message + '\n')
