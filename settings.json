@@ -3,15 +3,15 @@
         "subreddits": [
             {
                 "name": "PixelArt",
-                "min_karma": "100"
+                "min_karma": 100
             },
             {
                 "name": "Art",
-                "min_karma": "500"
+                "min_karma": 500
             },
             {
                 "name": "IndieGaming",
-                "min_karma": "50"
+                "min_karma": 50
             }
         ]
     },

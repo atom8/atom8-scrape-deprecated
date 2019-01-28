@@ -83,7 +83,7 @@ class MainApplication(tk.Frame):
 
         # Left division
         left_frame = tk.Frame(self)
-        left_frame.pack(side='left', padx=10, pady=10, 
+        left_frame.pack(side='left', padx=10, pady=10,
                         fill=tk.BOTH, expand=True)
 
         # Export destinaction
@@ -231,7 +231,7 @@ class MainApplication(tk.Frame):
             for se_name, se_karma in sub_entries:
                 if se_name.get().strip():
                     subs.append(
-                        {'name': se_name.get(), 'min_karma': se_karma.get()}
+                        {'name': se_name.get(), 'min_karma': int(se_karma.get())}
                     )
 
             app_settings['reddit']['subreddits'] = subs
