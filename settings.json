@@ -13,7 +13,8 @@
                 "name": "IndieGaming",
                 "min_karma": 50
             }
-        ]
+        ],
+        "enabled": true
     },
     "tigsource": {
         "topics": [
@@ -24,7 +25,8 @@
             "7091",
             "24094",
             "32077"
-        ]
+        ],
+        "enabled": false
     },
     "tumblr": {
         "tags": [
@@ -32,6 +34,7 @@
                 "tag": "PixelArt",
                 "min_notes": 100
             }
-        ]
+        ],
+        "enabled": false
     }
 }

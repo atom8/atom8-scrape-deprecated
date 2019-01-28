@@ -48,7 +48,7 @@ def perform_scrape(export_directory):
 
     timestamped_export_dir = etc.timestamp_directory(export_directory)
 
-    # Create export directory
+    # Create an export directory
     try:
         etc.create_directory(timestamped_export_dir)
         print('Export directory created @ %s' %
@@ -58,17 +58,19 @@ def perform_scrape(export_directory):
 
     settings = get_settings()
 
-    # TODO if reddit enable
-    print('Performing Reddit scrape')
-    reddit_control.scrape(
-        settings['reddit']['subreddits'], timestamped_export_dir,
-        verbose=True)
+    # Perform reddit scrape
+    if settings['reddit']['enabled']:
+        print('Performing Reddit scrape')
+        reddit_control.scrape(
+            settings['reddit']['subreddits'], timestamped_export_dir,
+            verbose=True)
 
-    # TODO if TIG enable
-    print('Performing TIGsource scrape')
-    tigsource_control.scrape(
-        settings['tigsource']['topics'], timestamped_export_dir,
-        verbose=True)
+    # Perform tigsource scrape
+    if settings['tigsource']['enabled']:
+        print('Performing TIGsource scrape')
+        tigsource_control.scrape(
+            settings['tigsource']['topics'], timestamped_export_dir,
+            verbose=True)
 
     return 0
 
@@ -80,6 +82,8 @@ class MainApplication(tk.Frame):
         self.parent = parent
 
         self.export_directory = None
+
+        app_settings = get_settings()
 
         # Left division
         left_frame = tk.Frame(self)
@@ -117,22 +121,40 @@ class MainApplication(tk.Frame):
         reddit_frame.pack()
         reddit_label = tk.Label(reddit_frame, text='Reddit')
         reddit_label.pack()
-        self.reddit_status_label = tk.Label(reddit_frame, text='Status: on')
+        self.reddit_enabled = app_settings['reddit']['enabled']
+        self.reddit_status_label = tk.Label(
+            reddit_frame,
+            text='Enabled: %s' % self.reddit_enabled,
+            bg='green' if self.reddit_enabled else 'red')
         self.reddit_status_label.pack()
-        open_reddit_settings_btn = tk.Button(reddit_frame, text='config')
+        reddit_btns = tk.Frame(reddit_frame)
+        reddit_btns.pack()
+        open_reddit_settings_btn = tk.Button(reddit_btns, text='config')
         open_reddit_settings_btn.config(command=self.open_reddit_settings)
-        open_reddit_settings_btn.pack()
+        open_reddit_settings_btn.grid(row=0, column=0)
+        toggle_reddit_btn = tk.Button(reddit_btns, text='toggle')
+        toggle_reddit_btn.config(command=self.toggle_reddit)
+        toggle_reddit_btn.grid(row=0, column=1)
 
         # TIGsource
         TIG_frame = tk.Frame(right_frame)
         TIG_frame.pack()
         TIG_label = tk.Label(TIG_frame, text='TIGsource')
         TIG_label.pack()
-        self.TIG_status_label = tk.Label(TIG_frame, text='Status: on')
+        self.TIG_enabled = app_settings['tigsource']['enabled']
+        self.TIG_status_label = tk.Label(
+            TIG_frame,
+            text='Enabled: %s' % self.TIG_enabled,
+            bg='green' if self.TIG_enabled else 'red')
         self.TIG_status_label.pack()
-        open_TIG_settings_btn = tk.Button(TIG_frame, text='config')
+        TIG_btns = tk.Frame(TIG_frame)
+        TIG_btns.pack()
+        open_TIG_settings_btn = tk.Button(TIG_btns, text='config')
         open_TIG_settings_btn.config(command=self.open_TIG_settings)
-        open_TIG_settings_btn.pack()
+        open_TIG_settings_btn.grid(row=0, column=0)
+        toggle_TIG_btn = tk.Button(TIG_btns, text='toggle')
+        toggle_TIG_btn.config(command=self.toggle_TIG)
+        toggle_TIG_btn.grid(row=0, column=1)
 
         # Perform scape
         perform_btn = tk.Button(right_frame, text='PERFORM SCRAPE')
@@ -319,6 +341,34 @@ class MainApplication(tk.Frame):
         cancel_btn = tk.Button(exit_buttons, text='Cancel',
                                command=diag.destroy)
         cancel_btn.grid(row=0, column=1)
+
+    def toggle_reddit(self):
+        self.reddit_enabled = not self.reddit_enabled
+        if self.reddit_enabled:
+            status = 'Enabled: True'
+            color = 'green'
+        else:
+            status = 'Enabled: False'
+            color = 'red'
+        self.reddit_status_label.config(text=status, bg=color)
+
+        app_settings = get_settings()
+        app_settings['reddit']['enabled'] = self.reddit_enabled
+        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+
+    def toggle_TIG(self):
+        self.TIG_enabled = not self.TIG_enabled
+        if self.TIG_enabled:
+            status = 'Enabled: True'
+            color = 'green'
+        else:
+            status = 'Enabled: False'
+            color = 'red'
+        self.TIG_status_label.config(text=status, bg=color)
+
+        app_settings = get_settings()
+        app_settings['tigsource']['enabled'] = self.TIG_enabled
+        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
 
     def print_message(self, message):
         self.output.insert(tk.END, message + '\n')
