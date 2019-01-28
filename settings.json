@@ -1,4 +1,7 @@
 {
+    "all": {
+        "export_directory": "C:/Users/Shel/Desktop/exports"
+    },
     "reddit": {
         "subreddits": [
             {
@@ -26,7 +29,7 @@
             "24094",
             "32077"
         ],
-        "enabled": false
+        "enabled": true
     },
     "twitter": {
         "enabled": false

@@ -1,4 +1,8 @@
 {
+    "all": {
+        "export_directory": "C:/Users/Shel/Desktop/exports"
+    },
+
     "reddit": 
     {
         "subreddits":

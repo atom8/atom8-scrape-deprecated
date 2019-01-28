@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import threading
@@ -42,8 +43,12 @@ class ScrapeThreadWrapper():
 
 
 def perform_scrape(export_directory):
-    if export_directory is None:
+    if export_directory is None or not export_directory:
         print('[ERROR] ~ specify an export directory')
+        return
+
+    if not os.path.isdir(export_directory):
+        print('[ERROR] ~ the export directory (%s) does not exist' % export_directory)
         return
 
     timestamped_export_dir = etc.timestamp_directory(export_directory)
@@ -81,9 +86,9 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs),
         self.parent = parent
 
-        self.export_directory = None
-
         app_settings = get_settings()
+
+        self.export_directory = app_settings['all']['export_directory']
 
         # Left division
         left_frame = tk.Frame(self)
@@ -93,7 +98,9 @@ class MainApplication(tk.Frame):
         # Export destinaction
         export_frame = tk.Frame(left_frame)
         export_frame.pack()
-        self.export_label = tk.Label(export_frame, text='Export to: ')
+        self.export_label = tk.Label(
+            export_frame,
+            text='Export to: %s' % self.export_directory)
         self.export_label.pack(side='left', padx=10)
         tk.Button(export_frame, text='Browse',
                   command=self.do_change_destination_folder).pack(side='right')
@@ -210,7 +217,12 @@ class MainApplication(tk.Frame):
         self.export_directory = destination_folder
 
         self.export_label.config(text='Export to: ' + destination_folder)
-        self.print_message('Export folder changed ~ %s' % destination_folder)
+        self.print_message('Export directory changed ~ %s' %
+                           destination_folder)
+
+        app_settings = get_settings()
+        app_settings['all']['export_directory'] = destination_folder
+        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
 
     def request_scrape(self):
         global EXPORT_DIRECTORY
