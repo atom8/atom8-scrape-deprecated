@@ -118,7 +118,7 @@ class MainApplication(tk.Frame):
 
         # Reddit
         reddit_frame = tk.Frame(right_frame)
-        reddit_frame.pack()
+        reddit_frame.pack(pady=5)
         reddit_label = tk.Label(reddit_frame, text='Reddit')
         reddit_label.pack()
         self.reddit_enabled = app_settings['reddit']['enabled']
@@ -138,7 +138,7 @@ class MainApplication(tk.Frame):
 
         # TIGsource
         TIG_frame = tk.Frame(right_frame)
-        TIG_frame.pack()
+        TIG_frame.pack(pady=5)
         TIG_label = tk.Label(TIG_frame, text='TIGsource')
         TIG_label.pack()
         self.TIG_enabled = app_settings['tigsource']['enabled']
@@ -155,6 +155,46 @@ class MainApplication(tk.Frame):
         toggle_TIG_btn = tk.Button(TIG_btns, text='toggle')
         toggle_TIG_btn.config(command=self.toggle_TIG)
         toggle_TIG_btn.grid(row=0, column=1)
+
+        # tumblr
+        tumblr_frame = tk.Frame(right_frame)
+        tumblr_frame.pack(pady=5)
+        tumblr_label = tk.Label(tumblr_frame, text='tumblr')
+        tumblr_label.pack()
+        self.tumblr_enabled = app_settings['tumblr']['enabled']
+        self.tumblr_status_label = tk.Label(
+            tumblr_frame,
+            text='Enabled: %s' % self.tumblr_enabled,
+            bg='green' if self.tumblr_enabled else 'red')
+        self.tumblr_status_label.pack()
+        tumblr_btns = tk.Frame(tumblr_frame)
+        tumblr_btns.pack()
+        open_tumblr_settings_btn = tk.Button(tumblr_btns, text='config')
+        open_tumblr_settings_btn.config(command=self.open_tumblr_settings)
+        open_tumblr_settings_btn.grid(row=0, column=0)
+        toggle_tumblr_btn = tk.Button(tumblr_btns, text='toggle')
+        toggle_tumblr_btn.config(command=self.toggle_tumblr)
+        toggle_tumblr_btn.grid(row=0, column=1)
+
+        # Twitter
+        twitter_frame = tk.Frame(right_frame)
+        twitter_frame.pack(pady=5)
+        twitter_label = tk.Label(twitter_frame, text='Twitter')
+        twitter_label.pack()
+        self.twitter_enabled = app_settings['twitter']['enabled']
+        self.twitter_status_label = tk.Label(
+            twitter_frame,
+            text='Enabled: %s' % self.twitter_enabled,
+            bg='green' if self.twitter_enabled else 'red')
+        self.twitter_status_label.pack()
+        twitter_btns = tk.Frame(twitter_frame)
+        twitter_btns.pack()
+        open_twitter_settings_btn = tk.Button(twitter_btns, text='config')
+        open_twitter_settings_btn.config(command=self.open_twitter_settings)
+        open_twitter_settings_btn.grid(row=0, column=0)
+        toggle_twitter_btn = tk.Button(twitter_btns, text='toggle')
+        toggle_twitter_btn.config(command=self.toggle_twitter)
+        toggle_twitter_btn.grid(row=0, column=1)
 
         # Perform scape
         perform_btn = tk.Button(right_frame, text='PERFORM SCRAPE')
@@ -342,6 +382,12 @@ class MainApplication(tk.Frame):
                                command=diag.destroy)
         cancel_btn.grid(row=0, column=1)
 
+    def open_tumblr_settings(self):
+        pass
+
+    def open_twitter_settings(self):
+        pass
+
     def toggle_reddit(self):
         self.reddit_enabled = not self.reddit_enabled
         if self.reddit_enabled:
@@ -369,6 +415,12 @@ class MainApplication(tk.Frame):
         app_settings = get_settings()
         app_settings['tigsource']['enabled'] = self.TIG_enabled
         etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+
+    def toggle_tumblr(self):
+        pass
+
+    def toggle_twitter(self):
+        pass
 
     def print_message(self, message):
         self.output.insert(tk.END, message + '\n')

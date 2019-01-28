@@ -28,6 +28,9 @@
         ],
         "enabled": false
     },
+    "twitter": {
+        "enabled": false
+    },
     "tumblr": {
         "tags": [
             {
