@@ -66,20 +66,21 @@ def get_posts_by_date(topic_num, days=7, verbose=False):
     return images
 
 
-def get_topic_images(t):
+def get_topic_images(t, verbose=False, days=7):
     out = []
     for topic in t:
-        out += get_posts_by_date(topic)
+        out += get_posts_by_date(topic, verbose,  days)
     return out
 
 
-def scrape(topics, export_directory, verbose=False):
+def scrape(topics, export_directory, verbose=False, days=7):
     """Perform tigsource scrape routine."""
 
     images = []
     if verbose:
         images = get_topic_images(
-            etc.verbose_iter(topics, 'Scanning TIGforum topics'))
+            etc.verbose_iter(topics, 'Scanning TIGforum topics'),
+            verbose=verbose, days=days)
         download_images(
             etc.verbose_iter(images, 'Download TIGforum images'),
             export_directory)

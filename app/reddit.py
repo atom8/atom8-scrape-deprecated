@@ -55,7 +55,7 @@ def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
     return posts
 
 
-def get_all_posts_from_subreddits(subreddits):
+def get_all_posts_from_subreddits(subreddits, days=7):
     # TODO different date ranges
 
     posts = []
@@ -63,7 +63,7 @@ def get_all_posts_from_subreddits(subreddits):
         subreddit_posts = get_posts_by_date(
             subreddit=subreddit['name'],
             min_score=subreddit['min_karma'],
-            days=7,
+            days=days,
         )
         posts += subreddit_posts
     return posts
@@ -101,16 +101,16 @@ def download_images(posts, export_directory):
     return post_info
 
 
-def scrape(subreddits, export_directory, verbose=False):
+def scrape(subreddits, export_directory, verbose=False, days=7):
     """Perform reddit scrape routine."""
 
     # Retrieve reddit posts
     reddit_posts = []
     if verbose:
         reddit_posts = get_all_posts_from_subreddits(
-            etc.verbose_iter(subreddits, 'Scanning subreddits'))
+            etc.verbose_iter(subreddits, 'Scanning subreddits'), days)
     else:
-        reddit_posts = get_all_posts_from_subreddits(subreddits)
+        reddit_posts = get_all_posts_from_subreddits(subreddits, days)
 
     # Extract post data and download files
     post_results = ''
