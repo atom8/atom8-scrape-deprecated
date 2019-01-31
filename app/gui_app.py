@@ -63,6 +63,8 @@ def perform_scrape(export_directory):
 
     settings = get_settings()
 
+    # TODO Get scan range
+
     # Perform reddit scrape
     if settings['reddit']['enabled']:
         print('Performing Reddit scrape')
@@ -104,6 +106,24 @@ class MainApplication(tk.Frame):
         self.export_label.pack(side='left', padx=10)
         tk.Button(export_frame, text='Browse',
                   command=self.do_change_destination_folder).pack(side='right')
+
+        # Scan range
+        scan_frame = tk.Frame(left_frame)
+        scan_frame.pack()
+        scan_ranges = [
+            ('Since Last', 1),
+            ('Custom', 2),
+        ]
+        self.scan_range_var = tk.IntVar()
+        self.scan_range_var.set(1)
+        tk.Label(scan_frame, text='Scan Range').pack(anchor=tk.W)
+        for text, val in scan_ranges:
+            tk.Radiobutton(
+                scan_frame, text=text, variable=self.scan_range_var, value=val
+            ).pack(anchor=tk.W)
+        self.last_scan_on_label = tk.Label(
+            scan_frame, text='Last successful scan\n%s' % ("uhh"))
+        self.last_scan_on_label.pack()
 
         # Output diag
         output_frame = tk.Frame(left_frame)
