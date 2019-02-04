@@ -132,7 +132,7 @@ class MainApplication(tk.Frame):
         scrape_ranges = [
             ('Since Last', ScrapeRange.SINCE_LAST.value),
             ('7 Days', ScrapeRange.ONE_WEEK.value),
-            ('Custom', ScrapeRange.CUSTOM.value),
+            # ScrapeRange.CUSTOM is added later because it needs more logic.
         ]
         self.scrape_range_var = tk.IntVar()
         self.scrape_range_var.set(ScrapeRange.SINCE_LAST.value)
@@ -142,7 +142,18 @@ class MainApplication(tk.Frame):
                 scrape_range_frame, text=text, variable=self.scrape_range_var,
                 value=val
             ).pack(anchor=tk.W)
+        # Custom scrape entry field
+        # Made using a grid so that the Entry and the Radiobutton are adjacent.
+        scrape_range_custom_frame = tk.Frame(scrape_range_frame)
+        tk.Radiobutton(
+            scrape_range_custom_frame, text='Custom',
+            variable=self.scrape_range_var, value=ScrapeRange.CUSTOM.value
+        ).grid(row=0, column=0)
+        self.scrape_range_custom_entry = tk.Entry(scrape_range_custom_frame)
+        self.scrape_range_custom_entry.grid(row=0, column=1)
+        scrape_range_custom_frame.pack()
         # Last scrape on
+        # read last scrape on from settings and put it into a label.
         last_scrape_on = app_settings['all'].get('last_scrape_date')
         self.last_scrape_on_label = tk.Label(
             scrape_range_frame,
@@ -295,8 +306,14 @@ class MainApplication(tk.Frame):
             SCRAPE_RANGE = 7
         elif scan_selection == ScrapeRange.CUSTOM:
             # TODO get custom field
-            print('[ERROR] Please specify a custom scrape range.')
-            return
+            print(self.scrape_range_custom_entry.get())
+            # custom_range = self.scrape_range_custom_entry.get()
+            try:
+                custom_range = int(self.scrape_range_custom_entry.get())
+                REQUEST_SCRAPE = custom_range
+            except ValueError:
+                print('[ERROR] Please specify a valid custom scrape range.')
+                return
 
         EXPORT_DIRECTORY = self.export_directory
         REQUEST_SCRAPE = True
