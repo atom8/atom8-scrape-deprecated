@@ -1,6 +1,7 @@
 {
     "all": {
-        "export_directory": "C:/Users/Shel/Desktop/exports"
+        "export_directory": "C:/Users/Shel/Desktop/exports",
+        "last_scrape_date": "2019-02-04"
     },
     "reddit": {
         "subreddits": [
@@ -17,7 +18,7 @@
                 "min_karma": 50
             }
         ],
-        "enabled": true
+        "enabled": false
     },
     "tigsource": {
         "topics": [
@@ -29,7 +30,7 @@
             "24094",
             "32077"
         ],
-        "enabled": true
+        "enabled": false
     },
     "twitter": {
         "enabled": false

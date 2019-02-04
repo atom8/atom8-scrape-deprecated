@@ -1,7 +1,10 @@
+import enum
 import os
 import sys
 import time
 import threading
+
+from datetime import datetime
 
 import tkinter as tk
 from tkinter import filedialog
@@ -13,8 +16,21 @@ from . import tigsource as tigsource_control
 APP_WIDTH = 960
 APP_HEIGHT = 640
 
-EXPORT_DIRECTORY = None
+# Scrape thread will perform a scrape when this flag is set to true
 REQUEST_SCRAPE = False
+
+# Directory the scrape exports images and data to
+EXPORT_DIRECTORY = None
+
+# Amount of days to scrape
+SCRAPE_RANGE = 0
+
+
+class ScrapeRange(enum.IntEnum):
+    '''An enum that specifies the different range options for scraper.'''
+    CUSTOM = 1,
+    SINCE_LAST = 2,
+    ONE_WEEK = 3
 
 
 def get_settings():
@@ -33,8 +49,9 @@ class ScrapeThreadWrapper():
         while True:
             if REQUEST_SCRAPE:
                 REQUEST_SCRAPE = False
-                print('*** SCRAPE STARTED ***')
-                result = perform_scrape(EXPORT_DIRECTORY)
+                print('*** SCRAPE STARTING ***')
+                print('Scrape Range: %d days' % SCRAPE_RANGE)
+                result = perform_scrape(EXPORT_DIRECTORY, SCRAPE_RANGE)
                 if result == 0:
                     print('*** SCRAPE COMPLETED ***')
                 else:
@@ -42,13 +59,14 @@ class ScrapeThreadWrapper():
             time.sleep(1)
 
 
-def perform_scrape(export_directory):
+def perform_scrape(export_directory, days):
     if export_directory is None or not export_directory:
         print('[ERROR] ~ specify an export directory')
         return
 
     if not os.path.isdir(export_directory):
-        print('[ERROR] ~ the export directory (%s) does not exist' % export_directory)
+        print('[ERROR] ~ the export directory (%s) does not exist' %
+              export_directory)
         return
 
     timestamped_export_dir = etc.timestamp_directory(export_directory)
@@ -63,21 +81,22 @@ def perform_scrape(export_directory):
 
     settings = get_settings()
 
-    # TODO Get scan range
-
     # Perform reddit scrape
     if settings['reddit']['enabled']:
         print('Performing Reddit scrape')
         reddit_control.scrape(
             settings['reddit']['subreddits'], timestamped_export_dir,
-            verbose=True)
+            verbose=True, days=days)
 
     # Perform tigsource scrape
     if settings['tigsource']['enabled']:
         print('Performing TIGsource scrape')
         tigsource_control.scrape(
             settings['tigsource']['topics'], timestamped_export_dir,
-            verbose=True)
+            verbose=True, days=days)
+
+    settings['all']['last_scrape_date'] = str(datetime.now().date())
+    etc.export_settings(etc.DEFAULT_SETTINGS_PATH, settings)
 
     return 0
 
@@ -107,23 +126,28 @@ class MainApplication(tk.Frame):
         tk.Button(export_frame, text='Browse',
                   command=self.do_change_destination_folder).pack(side='right')
 
-        # Scan range
-        scan_frame = tk.Frame(left_frame)
-        scan_frame.pack()
-        scan_ranges = [
-            ('Since Last', 1),
-            ('Custom', 2),
+        # Scrape range
+        scrape_range_frame = tk.Frame(left_frame)
+        scrape_range_frame.pack()
+        scrape_ranges = [
+            ('Since Last', ScrapeRange.SINCE_LAST.value),
+            ('7 Days', ScrapeRange.ONE_WEEK.value),
+            ('Custom', ScrapeRange.CUSTOM.value),
         ]
-        self.scan_range_var = tk.IntVar()
-        self.scan_range_var.set(1)
-        tk.Label(scan_frame, text='Scan Range').pack(anchor=tk.W)
-        for text, val in scan_ranges:
+        self.scrape_range_var = tk.IntVar()
+        self.scrape_range_var.set(ScrapeRange.SINCE_LAST.value)
+        tk.Label(scrape_range_frame, text='Scrape Range').pack(anchor=tk.W)
+        for text, val in scrape_ranges:
             tk.Radiobutton(
-                scan_frame, text=text, variable=self.scan_range_var, value=val
+                scrape_range_frame, text=text, variable=self.scrape_range_var,
+                value=val
             ).pack(anchor=tk.W)
-        self.last_scan_on_label = tk.Label(
-            scan_frame, text='Last successful scan\n%s' % ("uhh"))
-        self.last_scan_on_label.pack()
+        # Last scrape on
+        last_scrape_on = app_settings['all'].get('last_scrape_date')
+        self.last_scrape_on_label = tk.Label(
+            scrape_range_frame,
+            text='Last successful scrape: %s' % last_scrape_on)
+        self.last_scrape_on_label.pack()
 
         # Output diag
         output_frame = tk.Frame(left_frame)
@@ -247,11 +271,35 @@ class MainApplication(tk.Frame):
     def request_scrape(self):
         global EXPORT_DIRECTORY
         global REQUEST_SCRAPE
+        global SCRAPE_RANGE
+
+        app_settings = get_settings()
+
+        # Calculate SCRAPE_RANGE
+        SCRAPE_RANGE = 1
+        scan_selection = self.scrape_range_var.get()
+        if scan_selection == ScrapeRange.SINCE_LAST:
+            # Read date of last scrape from settings
+            last_scrape_on = app_settings['all'].get('last_scrape_date')
+            if last_scrape_on is not None:
+                # Converts last scrape on to datetime object and finds the
+                # difference between then and now.
+                time_since_last = datetime.now() \
+                    - datetime.strptime(last_scrape_on, '%Y-%m-%d')
+                # Sets the SCRAPE_RANGE to the time difference IN DAYS
+                SCRAPE_RANGE = time_since_last.days
+            else:
+                print("[ERROR] Please specify a valid time range.")
+                return
+        elif scan_selection == ScrapeRange.ONE_WEEK:
+            SCRAPE_RANGE = 7
+        elif scan_selection == ScrapeRange.CUSTOM:
+            # TODO get custom field
+            print('[ERROR] Please specify a custom scrape range.')
+            return
 
         EXPORT_DIRECTORY = self.export_directory
         REQUEST_SCRAPE = True
-
-        self.print_message("scrape requested")
 
     def open_reddit_settings(self):
         # TODO backup settings
@@ -325,7 +373,10 @@ class MainApplication(tk.Frame):
             for se_name, se_karma in sub_entries:
                 if se_name.get().strip():
                     subs.append(
-                        {'name': se_name.get(), 'min_karma': int(se_karma.get())}
+                        {
+                            'name': se_name.get(),
+                            'min_karma': int(se_karma.get())
+                        }
                     )
 
             app_settings['reddit']['subreddits'] = subs
