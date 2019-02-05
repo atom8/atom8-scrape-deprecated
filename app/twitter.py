@@ -12,7 +12,7 @@ def scrape(users, export_directory, verbose=False, days=7):
         users = etc.verbose_iter(users, 'Scanning twitter feeds')
     for user in users:
 
-        # Dont exit on the first tweet because it could be a pinned tweet and
+        # Don't exit on the first tweet because it could be a pinned tweet and
         # that messes up the time comparisons
         first_tweet = True
 
@@ -21,11 +21,11 @@ def scrape(users, export_directory, verbose=False, days=7):
                 print('.', end='')  # An indicator for each tweet read
 
             tweet_time = tweet.get('time')
-            if tweet_time > expire_date or first_tweet:
+            if tweet_time > expire_date:
                 tweet_photos = tweet.get('entries').get('photos')
                 if tweet_photos:
                     photos += tweet_photos
-            else:
+            elif not first_tweet:
                 break
             first_tweet = False
 

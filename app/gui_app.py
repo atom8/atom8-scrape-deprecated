@@ -12,6 +12,7 @@ from tkinter import filedialog
 from . import etc
 from . import reddit as reddit_control
 from . import tigsource as tigsource_control
+from . import twitter as twitter_control
 
 APP_WIDTH = 960
 APP_HEIGHT = 640
@@ -93,6 +94,13 @@ def perform_scrape(export_directory, days):
         print('Performing TIGsource scrape')
         tigsource_control.scrape(
             settings['tigsource']['topics'], timestamped_export_dir,
+            verbose=True, days=days)
+
+    # Perform twitter scrape
+    if settings['twitter']['enabled']:
+        print('Performing Twitter scrape')
+        twitter_control.scrape(
+            settings['twitter']['users'], timestamped_export_dir,
             verbose=True, days=days)
 
     settings['all']['last_scrape_date'] = str(datetime.now().date())
@@ -520,7 +528,20 @@ class MainApplication(tk.Frame):
         pass
 
     def toggle_twitter(self):
-        pass
+        self.twitter_enabled = not self.twitter_enabled
+        if self.twitter_enabled:
+            status = 'Enabled: True'
+            color = 'green'
+            print('twitter enabled')
+        else:
+            status = 'Enabled: False'
+            color = 'red'
+            print('twitter disabled')
+        self.twitter_status_label.config(text=status, bg=color)
+
+        app_settings = get_settings()
+        app_settings['twitter']['enabled'] = self.twitter_enabled
+        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
 
     def print_message(self, message):
         self.output.insert(tk.END, message + '\n')
