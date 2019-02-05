@@ -10,12 +10,13 @@ import click
 from . import etc
 from . import reddit as reddit_control
 from . import tigsource as TIG_control
+from . import twitter as twitter_control
 
 
 def determine_export_destination(prefix='export'):
     # prompt user for export directory
     requested_export_directory_path = click.prompt(
-        'Specify directory to export to (defaults to desktop)', 
+        'Specify directory to export to (defaults to desktop)',
         type=str, default='')
 
     # use desktop by default
@@ -24,7 +25,7 @@ def determine_export_destination(prefix='export'):
     else:
         export_directory_path = requested_export_directory_path
 
-    return etc.timestamp_directory(export_directory_path)
+    return etc.timestamp_directory(export_directory_path, prefix=prefix)
 
 
 @click.group()
@@ -72,3 +73,14 @@ def tigsource():
 
     TIG_control.scrape(settings['tigsource'], export_directory,
                        verbose=True)
+
+
+@scraper.command()
+def twitter():
+    export_directory = determine_export_destination(prefix='twitter')
+    etc.create_directory(export_directory)
+
+    settings = etc.get_scraper_settings('settings.json')
+
+    twitter_control.scrape(settings['twitter']['users'], export_directory,
+                           verbose=True)

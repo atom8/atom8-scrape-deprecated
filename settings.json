@@ -33,6 +33,10 @@
         "enabled": false
     },
     "twitter": {
+        "users": [
+            "_shellbot_",
+            "ChevyRay"
+        ],
         "enabled": false
     },
     "tumblr": {

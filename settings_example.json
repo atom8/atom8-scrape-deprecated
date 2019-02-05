@@ -37,5 +37,10 @@
                 "min_notes": 100
             }
         ]
+    },
+
+    "twitter": 
+    {
+        "users": ["_shellbot_", "NoelFB"]
     }
 }
