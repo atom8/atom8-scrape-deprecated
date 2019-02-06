@@ -420,7 +420,6 @@ class MainApplication(tk.Frame):
         cancel_btn.grid(row=0, column=1)
 
     def open_TIG_settings(self):
-
         app_settings = get_settings()
 
         diag = tk.Toplevel()
@@ -494,7 +493,76 @@ class MainApplication(tk.Frame):
         pass
 
     def open_twitter_settings(self):
-        pass
+        app_settings = get_settings()
+
+        diag = tk.Toplevel()
+        diag.wm_title("Twitter settings")
+
+        tk.Label(diag, text="Profiles").pack()
+
+        # Add profile editting frame
+        profiles_frame = tk.Frame(diag)
+        profiles_frame.pack()
+
+        # get "topics" from app settings
+        profile_data = app_settings['twitter']['users']
+
+        # A list containing references to each entry.
+        profile_entries = []
+        row_x = 0
+        for profile_no in profile_data:
+            profile_entry = tk.Entry(profiles_frame)
+            profile_entry.insert(0, profile_no)
+            profile_entry.grid(row=row_x, column=0)
+            profile_entries.append(profile_entry)
+            row_x += 1
+
+        # add profile
+        def add_profile():
+            nonlocal profile_entries
+
+            # row index to insert into
+            row = len(profile_entries)
+
+            pending = tk.Entry(profiles_frame)
+            pending.grid(row=row, column=0)
+            profile_entries.append(pending)
+
+        # remove profile
+        def remove_profile():
+            pass
+
+        # Manip buttons
+        edit_buttons = tk.Frame(diag)
+        edit_buttons.pack()
+        add_btn = tk.Button(edit_buttons, text='Add', command=add_profile)
+        add_btn.grid(row=100, column=0)
+
+        # Apply settings
+        def apply_settings():
+            nonlocal app_settings
+
+            print(profile_entries)
+
+            profiles = []
+            for profile_entry in profile_entries:
+                if profile_entry.get().strip():
+                    profiles.append(profile_entry.get())
+
+            app_settings['twitter']['users'] = profiles
+            etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+
+            diag.destroy()
+
+        # Add final buttons
+        exit_buttons = tk.Frame(diag)
+        exit_buttons.pack(side='bottom')
+        apply_btn = tk.Button(exit_buttons, text="Apply",
+                              command=apply_settings)
+        apply_btn.grid(row=0, column=0)
+        cancel_btn = tk.Button(exit_buttons, text='Cancel',
+                               command=diag.destroy)
+        cancel_btn.grid(row=0, column=1)
 
     def toggle_reddit(self):
         self.reddit_enabled = not self.reddit_enabled
