@@ -24,7 +24,14 @@ def retrieve_tumblr_blog_photo_posts(tumblr_blog, verbose=False, days=7):
 
     processing = True
     while processing:
-        response = requests.get(BASE_TUMBLR_REQUEST.format(tumblr_blog, start))
+        req = BASE_TUMBLR_REQUEST.format(tumblr_blog, start)
+        response = requests.get(req)
+
+        if not response.ok:
+            if verbose:
+                print("[ERROR] Bad response (" + req + ")")
+            processing = False
+            break
 
         tumblr_data = BeautifulSoup(response.text, 'lxml')
         tumblr_posts = tumblr_data.find_all('post')
