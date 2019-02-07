@@ -280,8 +280,7 @@ class MainApplication(tk.Frame):
         self.export_directory = destination_folder
 
         self.export_label.config(text='Export to: ' + destination_folder)
-        self.print_message('Export directory changed ~ %s' %
-                           destination_folder)
+        print('Export directory changed ~ ' + destination_folder)
 
         app_settings = get_settings()
         app_settings['all']['export_directory'] = destination_folder
@@ -564,56 +563,39 @@ class MainApplication(tk.Frame):
                                command=diag.destroy)
         cancel_btn.grid(row=0, column=1)
 
-    def toggle_reddit(self):
-        self.reddit_enabled = not self.reddit_enabled
-        if self.reddit_enabled:
+    def toggle_backend(self, enabled, setting_name, label):
+        if enabled:
             status = 'Enabled: True'
             color = 'green'
+            print('Backend enabled: ' + setting_name)
         else:
             status = 'Enabled: False'
             color = 'red'
-        self.reddit_status_label.config(text=status, bg=color)
+            print('Backend disabled: ' + setting_name)
+
+        label.config(text=status, bg=color)
 
         app_settings = get_settings()
-        app_settings['reddit']['enabled'] = self.reddit_enabled
+        app_settings[setting_name]['enabled'] = enabled
         etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+
+    def toggle_reddit(self):
+        self.reddit_enabled = not self.reddit_enabled
+        self.toggle_backend(
+            self.reddit_enabled, 'reddit', self.reddit_status_label)
 
     def toggle_TIG(self):
         self.TIG_enabled = not self.TIG_enabled
-        if self.TIG_enabled:
-            status = 'Enabled: True'
-            color = 'green'
-        else:
-            status = 'Enabled: False'
-            color = 'red'
-        self.TIG_status_label.config(text=status, bg=color)
-
-        app_settings = get_settings()
-        app_settings['tigsource']['enabled'] = self.TIG_enabled
-        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+        self.toggle_backend(
+            self.TIG_enabled, 'tigsource', self.TIG_status_label)
 
     def toggle_tumblr(self):
         pass
 
     def toggle_twitter(self):
         self.twitter_enabled = not self.twitter_enabled
-        if self.twitter_enabled:
-            status = 'Enabled: True'
-            color = 'green'
-            print('twitter enabled')
-        else:
-            status = 'Enabled: False'
-            color = 'red'
-            print('twitter disabled')
-        self.twitter_status_label.config(text=status, bg=color)
-
-        app_settings = get_settings()
-        app_settings['twitter']['enabled'] = self.twitter_enabled
-        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
-
-    def print_message(self, message):
-        self.output.insert(tk.END, message + '\n')
-        self.output.update()
+        self.toggle_backend(
+            self.twitter_enabled, 'twitter', self.twitter_status_label)
 
 
 class StdoutRedirector(object):
