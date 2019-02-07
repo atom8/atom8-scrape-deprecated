@@ -7,9 +7,10 @@ def scrape(users, export_directory, verbose=False, days=7):
 
     expire_date = datetime.now() - timedelta(days=days)
 
-    photos = []
     if verbose:
         users = etc.verbose_iter(users, 'Scanning twitter feeds')
+
+    photos = []
     for user in users:
 
         # Don't exit on the first tweet because it could be a pinned tweet and
@@ -29,7 +30,8 @@ def scrape(users, export_directory, verbose=False, days=7):
                 break
             first_tweet = False
 
-        print('')  # newline
+        if verbose:
+            print('')  # newline
 
     if verbose:
         photos = etc.verbose_iter(photos, 'Downloading twitter images')

@@ -44,12 +44,20 @@ def all():
 
     # perform scrapes
     click.secho("\nPerforming Reddit scrape", fg='yellow')
-    reddit_control.scrape(settings['reddit']['subreddits'], export_directory,
-                          verbose=True)
+    reddit_control.scrape(
+        settings['reddit']['subreddits'], export_directory, verbose=True)
 
     click.secho("\nPerforming TIGSource scrape", fg='yellow')
-    TIG_control.scrape(settings['tigsource']['topics'], export_directory,
-                       verbose=True)
+    TIG_control.scrape(
+        settings['tigsource']['topics'], export_directory, verbose=True)
+
+    click.secho("\nPerforming Tumblr scrape", fg='yellow')
+    tumblr_control.scrape(
+        settings['tumblr']['blogs'], export_directory, verbose=True)
+
+    click.secho("\nPerforming Twitter scrape", fg='yellow')
+    twitter_control.scrape(
+        settings['twitter']['users'], export_directory, verbose=True)
 
     click.secho("\nTASK COMPLETE!", fg='green')
 
@@ -61,8 +69,8 @@ def reddit():
 
     settings = etc.get_scraper_settings('settings.json')
 
-    reddit_control.scrape(settings['reddit']['subreddits'], export_directory,
-                          verbose=True)
+    reddit_control.scrape(
+        settings['reddit']['subreddits'], export_directory, verbose=True)
 
 
 @scraper.command()
@@ -94,5 +102,5 @@ def twitter():
 
     settings = etc.get_scraper_settings('settings.json')
 
-    twitter_control.scrape(settings['twitter']['users'], export_directory,
-                           verbose=True)
+    twitter_control.scrape(
+        settings['twitter']['users'], export_directory, verbose=True)

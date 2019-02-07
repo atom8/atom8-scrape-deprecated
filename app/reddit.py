@@ -106,21 +106,20 @@ def scrape(subreddits, export_directory, verbose=False, days=7):
 
     # Retrieve reddit posts
     reddit_posts = []
+
     if verbose:
-        reddit_posts = get_all_posts_from_subreddits(
-            etc.verbose_iter(subreddits, 'Scanning subreddits'), days)
-    else:
-        reddit_posts = get_all_posts_from_subreddits(subreddits, days)
+        subreddits = etc.verbose_iter(subreddits, 'Scanning subreddits')
+
+    reddit_posts = get_all_posts_from_subreddits(subreddits, days)
 
     # Extract post data and download files
     post_results = ''
 
     if verbose:
-        post_results = download_images(
-            etc.verbose_iter(reddit_posts, 'Downloading reddit images'),
-            export_directory)
-    else:
-        post_results = download_images(reddit_posts, export_directory)
+        reddit_posts = etc.verbose_iter(
+            reddit_posts, 'Downloading reddit images')
+
+    post_results = download_images(reddit_posts, export_directory)
 
     # Export post data
     # TODO sort posts by highest karma
