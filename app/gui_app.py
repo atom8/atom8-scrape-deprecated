@@ -320,12 +320,9 @@ class MainApplication(tk.Frame):
         elif scan_selection == ScrapeRange.ONE_WEEK:
             SCRAPE_RANGE = 7
         elif scan_selection == ScrapeRange.CUSTOM:
-            # TODO get custom field
-            print(self.scrape_range_custom_entry.get())
-            # custom_range = self.scrape_range_custom_entry.get()
             try:
-                custom_range = int(self.scrape_range_custom_entry.get())
-                REQUEST_SCRAPE = custom_range
+                SCRAPE_RANGE = int(self.scrape_range_custom_entry.get())
+                REQUEST_SCRAPE = True
             except ValueError:
                 print('[ERROR] Please specify a valid custom scrape range.')
                 return
