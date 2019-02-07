@@ -1,8 +1,8 @@
-import etc
 import os
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+from . import etc
 
 # Provides access to tumblr blog and returns 25 of photo posts starting from
 # a variable index.
@@ -90,11 +90,11 @@ def scrape(tumblr_blogs, export_directory, verbose=False, days=7):
             tumblr_post['url'], export_directory, tumblr_post['id'] + ext)
 
 
-if __name__ == '__main__':
-    TEST_BLOGS = ['thecollectibles', 'gamedevinspo']
+# if __name__ == '__main__':
+#     TEST_BLOGS = ['thecollectibles', 'gamedevinspo']
 
-    export_directory = etc.timestamp_directory(
-        etc.find_desktop(), prefix='tumblr')
-    etc.create_directory(export_directory)
+#     export_directory = etc.timestamp_directory(
+#         etc.find_desktop(), prefix='tumblr')
+#     etc.create_directory(export_directory)
 
-    scrape(TEST_BLOGS, export_directory, verbose=True)
+#     scrape(TEST_BLOGS, export_directory, verbose=True)

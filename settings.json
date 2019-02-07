@@ -40,6 +40,10 @@
         "enabled": false
     },
     "tumblr": {
+        "blogs": [
+            "sshellbot",
+            "thecollectibles"
+        ],
         "tags": [
             {
                 "tag": "PixelArt",

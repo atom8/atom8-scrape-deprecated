@@ -10,6 +10,7 @@ import click
 from . import etc
 from . import reddit as reddit_control
 from . import tigsource as TIG_control
+from . import tumblr as tumblr_control
 from . import twitter as twitter_control
 
 
@@ -71,8 +72,19 @@ def tigsource():
 
     settings = etc.get_scraper_settings('settings.json')
 
-    TIG_control.scrape(settings['tigsource'], export_directory,
-                       verbose=True)
+    TIG_control.scrape(
+        settings['tigsource']['topics'], export_directory, verbose=True)
+
+
+@scraper.command()
+def tumblr():
+    export_directory = determine_export_destination(prefix='tigsource')
+    etc.create_directory(export_directory)
+
+    settings = etc.get_scraper_settings('settings.json')
+
+    tumblr_control.scrape(
+        settings['tumblr']['blogs'], export_directory, verbose=True)
 
 
 @scraper.command()
