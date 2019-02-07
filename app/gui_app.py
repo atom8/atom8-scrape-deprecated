@@ -12,6 +12,7 @@ from tkinter import filedialog
 from . import etc
 from . import reddit as reddit_control
 from . import tigsource as tigsource_control
+from . import tumblr as tumblr_control
 from . import twitter as twitter_control
 
 APP_WIDTH = 960
@@ -94,6 +95,13 @@ def perform_scrape(export_directory, days):
         print('Performing TIGsource scrape')
         tigsource_control.scrape(
             settings['tigsource']['topics'], timestamped_export_dir,
+            verbose=True, days=days)
+
+    # Perform tumblr scrape
+    if settings['tumblr']['enabled']:
+        print('Performing tumblr scrape')
+        tumblr_control.scrape(
+            settings['tumblr']['blogs'], timestamped_export_dir,
             verbose=True, days=days)
 
     # Perform twitter scrape
@@ -590,7 +598,9 @@ class MainApplication(tk.Frame):
             self.TIG_enabled, 'tigsource', self.TIG_status_label)
 
     def toggle_tumblr(self):
-        pass
+        self.tumblr_enabled = not self.tumblr_enabled
+        self.toggle_backend(
+            self.tumblr_enabled, 'tumblr', self.tumblr_status_label)
 
     def toggle_twitter(self):
         self.twitter_enabled = not self.twitter_enabled
