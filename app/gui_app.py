@@ -9,12 +9,17 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog
 
+from .config import load_config
 from . import etc
 from . import reddit as reddit_control
 from . import tigsource as tigsource_control
 from . import tumblr as tumblr_control
 from . import twitter as twitter_control
 
+# App config
+config = None
+
+# Window dimensions
 APP_WIDTH = 960
 APP_HEIGHT = 640
 
@@ -27,35 +32,12 @@ EXPORT_DIRECTORY = None
 # Amount of days to scrape
 SCRAPE_RANGE = 0
 
-# configuration file
-CONFIG = None
-
-# JSON file containing current settings
-CURRENT_SETTINGS = None
-
 
 class ScrapeRange(enum.IntEnum):
     '''An enum that specifies the different range options for scraper.'''
     CUSTOM = 1,
     SINCE_LAST = 2,
     ONE_WEEK = 3
-
-
-def change_settings(settings_filename):
-    global CURRENT_SETTINGS
-    try:
-        settings_file = etc.retrieve_JSON(settings_filename)
-    except FileNotFoundError:
-        print("ERROR: Settings file \"%s\" not found" % settings_filename)
-        return None
-
-    CURRENT_SETTINGS = settings_file
-
-    return CURRENT_SETTINGS
-
-
-def get_settings():
-    return CURRENT_SETTINGS
 
 
 class ScrapeThreadWrapper():
@@ -100,38 +82,36 @@ def perform_scrape(export_directory, days):
     except OSError:
         return
 
-    settings = get_settings()
-
     # Perform reddit scrape
-    if settings['reddit']['enabled']:
+    if config.options['reddit']['enabled']:
         print('Performing Reddit scrape')
         reddit_control.scrape(
-            settings['reddit']['subreddits'], timestamped_export_dir,
+            config.options['reddit']['subreddits'], timestamped_export_dir,
             verbose=True, days=days)
 
     # Perform tigsource scrape
-    if settings['tigsource']['enabled']:
+    if config.options['tigsource']['enabled']:
         print('Performing TIGsource scrape')
         tigsource_control.scrape(
-            settings['tigsource']['topics'], timestamped_export_dir,
+            config.options['tigsource']['topics'], timestamped_export_dir,
             verbose=True, days=days)
 
     # Perform tumblr scrape
-    if settings['tumblr']['enabled']:
+    if config.options['tumblr']['enabled']:
         print('Performing tumblr scrape')
         tumblr_control.scrape(
-            settings['tumblr']['blogs'], timestamped_export_dir,
+            config.options['tumblr']['blogs'], timestamped_export_dir,
             verbose=True, days=days)
 
     # Perform twitter scrape
-    if settings['twitter']['enabled']:
+    if config.options['twitter']['enabled']:
         print('Performing Twitter scrape')
         twitter_control.scrape(
-            settings['twitter']['users'], timestamped_export_dir,
+            config.options['twitter']['users'], timestamped_export_dir,
             verbose=True, days=days)
 
-    settings['all']['last_scrape_date'] = str(datetime.now().date())
-    etc.export_settings(etc.DEFAULT_SETTINGS_PATH, settings)
+    config.options['all']['last_scrape_date'] = str(datetime.now().date())
+    config.save_options()
 
     return 0
 
@@ -142,21 +122,24 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs),
         self.parent = parent
 
-        app_settings = get_settings()
-
-        self.export_directory = app_settings['all']['export_directory']
+        # Settings selection
+        settings_frame = tk.Frame(self)
+        settings_frame.pack()
+        self.settings_label = tk.Label(settings_frame)
+        self.settings_label.pack(side='left', padx=10, pady=10)
+        tk.Button(settings_frame, text='Change',
+                  command=self.do_change_options).pack(side='right')
 
         # Left division
         left_frame = tk.Frame(self)
         left_frame.pack(side='left', padx=10, pady=10,
                         fill=tk.BOTH, expand=True)
 
-        # Export destinaction
+        # Export destination
+        self.export_directory = ''
         export_frame = tk.Frame(left_frame)
         export_frame.pack()
-        self.export_label = tk.Label(
-            export_frame,
-            text='Export to: %s' % self.export_directory)
+        self.export_label = tk.Label(export_frame)
         self.export_label.pack(side='left', padx=10)
         tk.Button(export_frame, text='Browse',
                   command=self.do_change_destination_folder).pack(side='right')
@@ -187,12 +170,10 @@ class MainApplication(tk.Frame):
         self.scrape_range_custom_entry = tk.Entry(scrape_range_custom_frame)
         self.scrape_range_custom_entry.grid(row=0, column=1)
         scrape_range_custom_frame.pack()
+
         # Last scrape on
         # read last scrape on from settings and put it into a label.
-        last_scrape_on = app_settings['all'].get('last_scrape_date')
-        self.last_scrape_on_label = tk.Label(
-            scrape_range_frame,
-            text='Last successful scrape: %s' % last_scrape_on)
+        self.last_scrape_on_label = tk.Label(scrape_range_frame)
         self.last_scrape_on_label.pack()
 
         # Output diag
@@ -218,12 +199,11 @@ class MainApplication(tk.Frame):
         reddit_frame.pack(pady=5)
         reddit_label = tk.Label(reddit_frame, text='Reddit')
         reddit_label.pack()
-        self.reddit_enabled = app_settings['reddit']['enabled']
-        self.reddit_status_label = tk.Label(
-            reddit_frame,
-            text='Enabled: %s' % self.reddit_enabled,
-            bg='green' if self.reddit_enabled else 'red')
+
+        self.reddit_enabled = False
+        self.reddit_status_label = tk.Label(reddit_frame)
         self.reddit_status_label.pack()
+
         reddit_btns = tk.Frame(reddit_frame)
         reddit_btns.pack()
         open_reddit_settings_btn = tk.Button(reddit_btns, text='config')
@@ -238,12 +218,11 @@ class MainApplication(tk.Frame):
         TIG_frame.pack(pady=5)
         TIG_label = tk.Label(TIG_frame, text='TIGsource')
         TIG_label.pack()
-        self.TIG_enabled = app_settings['tigsource']['enabled']
-        self.TIG_status_label = tk.Label(
-            TIG_frame,
-            text='Enabled: %s' % self.TIG_enabled,
-            bg='green' if self.TIG_enabled else 'red')
+
+        self.TIG_enabled = False
+        self.TIG_status_label = tk.Label(TIG_frame)
         self.TIG_status_label.pack()
+
         TIG_btns = tk.Frame(TIG_frame)
         TIG_btns.pack()
         open_TIG_settings_btn = tk.Button(TIG_btns, text='config')
@@ -258,12 +237,11 @@ class MainApplication(tk.Frame):
         tumblr_frame.pack(pady=5)
         tumblr_label = tk.Label(tumblr_frame, text='tumblr')
         tumblr_label.pack()
-        self.tumblr_enabled = app_settings['tumblr']['enabled']
-        self.tumblr_status_label = tk.Label(
-            tumblr_frame,
-            text='Enabled: %s' % self.tumblr_enabled,
-            bg='green' if self.tumblr_enabled else 'red')
+
+        self.tumblr_enabled = False
+        self.tumblr_status_label = tk.Label(tumblr_frame)
         self.tumblr_status_label.pack()
+
         tumblr_btns = tk.Frame(tumblr_frame)
         tumblr_btns.pack()
         open_tumblr_settings_btn = tk.Button(tumblr_btns, text='config')
@@ -278,12 +256,11 @@ class MainApplication(tk.Frame):
         twitter_frame.pack(pady=5)
         twitter_label = tk.Label(twitter_frame, text='Twitter')
         twitter_label.pack()
-        self.twitter_enabled = app_settings['twitter']['enabled']
-        self.twitter_status_label = tk.Label(
-            twitter_frame,
-            text='Enabled: %s' % self.twitter_enabled,
-            bg='green' if self.twitter_enabled else 'red')
+
+        self.twitter_enabled = False
+        self.twitter_status_label = tk.Label(twitter_frame)
         self.twitter_status_label.pack()
+
         twitter_btns = tk.Frame(twitter_frame)
         twitter_btns.pack()
         open_twitter_settings_btn = tk.Button(twitter_btns, text='config')
@@ -301,31 +278,47 @@ class MainApplication(tk.Frame):
         # Set sysout to output_textbox
         sys.stdout = StdoutRedirector(self.output)
 
+        # parse the config
+        self.parse_options(config.options)
+        self.set_options(config.options_path)
+
     def do_change_destination_folder(self):
-        destination_folder = filedialog.askdirectory()
+        export_directory = filedialog.askdirectory()
 
-        self.export_directory = destination_folder
+        self.set_export_directory(export_directory)
+        config.options['all']['export_directory'] = export_directory
+        config.save_options()
 
-        self.export_label.config(text='Export to: ' + destination_folder)
-        print('Export directory changed ~ ' + destination_folder)
+        print('Export directory changed ~ ' + export_directory)
 
-        app_settings = get_settings()
-        app_settings['all']['export_directory'] = destination_folder
-        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+    def do_change_options(self):
+        options_filename = filedialog.askopenfilename()
+
+        try:
+            new_options = etc.retrieve_JSON(options_filename)
+            self.parse_options(new_options)
+
+        except FileNotFoundError:
+            print("ERROR: Settings file \"%s\" not found" % options_filename)
+            return None
+
+        config.set_options(new_options, options_filename)
+        self.set_options(options_filename)
+        config.save_config()
+
+        print("Settings changed -> %s" % options_filename)
 
     def request_scrape(self):
         global EXPORT_DIRECTORY
         global REQUEST_SCRAPE
         global SCRAPE_RANGE
 
-        app_settings = get_settings()
-
         # Calculate SCRAPE_RANGE
         SCRAPE_RANGE = 1
         scan_selection = self.scrape_range_var.get()
         if scan_selection == ScrapeRange.SINCE_LAST:
             # Read date of last scrape from settings
-            last_scrape_on = app_settings['all'].get('last_scrape_date')
+            last_scrape_on = config.options['all'].get('last_scrape_date')
             if last_scrape_on is not None:
                 # Converts last scrape on to datetime object and finds the
                 # difference between then and now.
@@ -353,8 +346,6 @@ class MainApplication(tk.Frame):
         # TODO backup settings
         # maximum of 100 subs
 
-        app_settings = get_settings()
-
         settings = tk.Toplevel()
         settings.wm_title("Reddit settings")
         settings.geometry('320x240')
@@ -366,7 +357,7 @@ class MainApplication(tk.Frame):
         subs_frame.pack()
 
         # get data from app settings
-        sub_data = app_settings['reddit']['subreddits']
+        sub_data = config.options['reddit']['subreddits']
 
         # A list containing references to each entry. Each entry is a tuple.
         sub_entries = []
@@ -412,9 +403,6 @@ class MainApplication(tk.Frame):
 
         # Apply Button functionality
         def apply_settings():
-            '''save settings to settings.json'''
-            nonlocal app_settings
-
             # TODO validate
 
             subs = []
@@ -427,8 +415,8 @@ class MainApplication(tk.Frame):
                         }
                     )
 
-            app_settings['reddit']['subreddits'] = subs
-            etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+            config.options['reddit']['subreddits'] = subs
+            config.save_options()
 
             settings.destroy()
 
@@ -443,8 +431,6 @@ class MainApplication(tk.Frame):
         cancel_btn.grid(row=0, column=1)
 
     def open_TIG_settings(self):
-        app_settings = get_settings()
-
         diag = tk.Toplevel()
         diag.wm_title("TIG settings")
 
@@ -455,7 +441,7 @@ class MainApplication(tk.Frame):
         topics_frame.pack()
 
         # get "topics" from app settings
-        topics_data = app_settings['tigsource']['topics']
+        topics_data = config.options['tigsource']['topics']
 
         # A list containing references to each entry.
         topic_entries = []
@@ -490,15 +476,13 @@ class MainApplication(tk.Frame):
 
         # Apply settings
         def apply_settings():
-            nonlocal app_settings
-
             topics = []
             for topic_entry in topic_entries:
                 if topic_entry.get().strip():
                     topics.append(int(topic_entry.get()))
 
-            app_settings['tigsource']['topics'] = topics
-            etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+            config.options['tigsource']['topics'] = topics
+            config.save_options()
 
             diag.destroy()
 
@@ -516,8 +500,6 @@ class MainApplication(tk.Frame):
         pass
 
     def open_twitter_settings(self):
-        app_settings = get_settings()
-
         diag = tk.Toplevel()
         diag.wm_title("Twitter settings")
 
@@ -528,7 +510,7 @@ class MainApplication(tk.Frame):
         profiles_frame.pack()
 
         # get "topics" from app settings
-        profile_data = app_settings['twitter']['users']
+        profile_data = config.options['twitter']['users']
 
         # A list containing references to each entry.
         profile_entries = []
@@ -563,8 +545,6 @@ class MainApplication(tk.Frame):
 
         # Apply settings
         def apply_settings():
-            nonlocal app_settings
-
             print(profile_entries)
 
             profiles = []
@@ -572,8 +552,8 @@ class MainApplication(tk.Frame):
                 if profile_entry.get().strip():
                     profiles.append(profile_entry.get())
 
-            app_settings['twitter']['users'] = profiles
-            etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
+            config.options['twitter']['users'] = profiles
+            config.save_options()
 
             diag.destroy()
 
@@ -587,7 +567,44 @@ class MainApplication(tk.Frame):
                                command=diag.destroy)
         cancel_btn.grid(row=0, column=1)
 
-    def toggle_backend(self, enabled, setting_name, label):
+    def parse_options(self, options):
+        self.set_export_directory(options['all']['export_directory'])
+        self.set_last_scrape_on(options['all']['last_scrape_date'])
+        self.set_reddit_status(options['reddit']['enabled'])
+        self.set_tumblr_status(options['tumblr']['enabled'])
+        self.set_tigsource_status(options['tigsource']['enabled'])
+        self.set_twitter_status(options['twitter']['enabled'])
+
+    def set_export_directory(self, export_directory):
+        self.export_directory = export_directory
+        self.export_label.config(text='Export to: ' + export_directory)
+
+    def set_last_scrape_on(self, last_scrape_on):
+        self.last_scrape_on_label.config(
+            text='Last succesfl scrape: %s' % last_scrape_on)
+
+    def set_options(self, options_path):
+        self.settings_label.config(
+            text='Current options configuration: %s' % options_path
+        )
+
+    def set_reddit_status(self, enabled):
+        self.reddit_enabled = enabled
+        self.set_backend_status(enabled, 'reddit', self.reddit_status_label)
+
+    def set_tigsource_status(self, enabled):
+        self.TIG_enabled = enabled
+        self.set_backend_status(enabled, 'tigsource', self.TIG_status_label)
+
+    def set_twitter_status(self, enabled):
+        self.twitter_enabled = enabled
+        self.set_backend_status(enabled, 'twitter', self.twitter_status_label)
+
+    def set_tumblr_status(self, enabled):
+        self.tumblr_enabled = enabled
+        self.set_backend_status(enabled, 'tumblr', self.tumblr_status_label)
+
+    def set_backend_status(self, enabled, setting_name, label):
         if enabled:
             status = 'Enabled: True'
             color = 'green'
@@ -599,29 +616,37 @@ class MainApplication(tk.Frame):
 
         label.config(text=status, bg=color)
 
-        app_settings = get_settings()
-        app_settings[setting_name]['enabled'] = enabled
-        etc.export_settings(etc.DEFAULT_SETTINGS_PATH, app_settings)
-
     def toggle_reddit(self):
         self.reddit_enabled = not self.reddit_enabled
-        self.toggle_backend(
+        self.set_backend_status(
             self.reddit_enabled, 'reddit', self.reddit_status_label)
+
+        config.options['reddit']['enabled'] = self.reddit_enabled
+        config.save_options()
 
     def toggle_TIG(self):
         self.TIG_enabled = not self.TIG_enabled
-        self.toggle_backend(
+        self.set_backend_status(
             self.TIG_enabled, 'tigsource', self.TIG_status_label)
+
+        config.options['tigsource']['enabled'] = self.TIG_enabled
+        config.save_options()
 
     def toggle_tumblr(self):
         self.tumblr_enabled = not self.tumblr_enabled
-        self.toggle_backend(
+        self.set_backend_status(
             self.tumblr_enabled, 'tumblr', self.tumblr_status_label)
+
+        config.options['tumblr']['enabled'] = self.tumblr_enabled
+        config.save_options()
 
     def toggle_twitter(self):
         self.twitter_enabled = not self.twitter_enabled
-        self.toggle_backend(
+        self.set_backend_status(
             self.twitter_enabled, 'twitter', self.twitter_status_label)
+
+        config.options['twitter']['enabled'] = self.twitter_enabled
+        config.save_options()
 
 
 class StdoutRedirector(object):
@@ -636,13 +661,8 @@ class StdoutRedirector(object):
 
 def run_app():
     # Load configuration
-    config = etc.retrieve_JSON('config.json')
-
-    # Load settings file
-    settings = change_settings(config['settings_path'])
-    if settings is None:
-        print("ERROR: Settings not found")
-        return
+    global config
+    config = load_config()
 
     # Create root tkinter
     root = tk.Tk()

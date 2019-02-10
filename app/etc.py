@@ -6,11 +6,6 @@ import urllib
 import time
 
 
-# ./../settings.json
-DEFAULT_SETTINGS_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), '../settings.json')
-
-
 def create_directory(directory_path):
     """Creates a directory."""
     try:
@@ -49,9 +44,9 @@ def download_image_from_url(url, directory, filename=None):
         print('[ERROR] Could not download: ' + url)
 
 
-def export_settings(export_destination, settings_dict):
+def export_JSON(export_destination, json_dict):
     with open(export_destination, 'w') as f:
-        json.dump(settings_dict, f, indent=4)
+        json.dump(json_dict, f, indent=4)
 
 
 def find_desktop():
@@ -68,28 +63,18 @@ def find_desktop():
 
 
 def retrieve_JSON(filename):
-    """Retrieve settings for scraper.
-
-    Note:
-        After loading settings this function saves settings to a global, so
-        that settings only needs to be saved once.
+    """Retrieve JSON file as dict.
 
     Args:
-        settings_filename (str): the path to the settings file.
+        filename (str): the path to the JSON file.
 
     Returns:
-        dict: the scraper settings.
+        dict: the JSON file.
     """
 
     with open(filename) as json_file:
         json_data = json.load(json_file)
     return json_data
-
-
-def refresh_scraper_settings(settings_filename):
-    global SETTINGS
-    with open(settings_filename) as settings_file:
-        SETTINGS = json.load(settings_file)
 
 
 def timestamp_directory(directory_path, prefix='export'):
