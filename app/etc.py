@@ -6,8 +6,6 @@ import urllib
 import time
 
 
-SETTINGS = None
-
 # ./../settings.json
 DEFAULT_SETTINGS_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), '../settings.json')
@@ -69,7 +67,7 @@ def find_desktop():
         return os.getcwd()
 
 
-def get_scraper_settings(settings_filename):
+def retrieve_JSON(filename):
     """Retrieve settings for scraper.
 
     Note:
@@ -83,13 +81,9 @@ def get_scraper_settings(settings_filename):
         dict: the scraper settings.
     """
 
-    global SETTINGS
-
-    if SETTINGS is None:
-        with open(settings_filename) as settings_file:
-            SETTINGS = json.load(settings_file)
-
-    return SETTINGS
+    with open(filename) as json_file:
+        json_data = json.load(json_file)
+    return json_data
 
 
 def refresh_scraper_settings(settings_filename):

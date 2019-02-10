@@ -27,6 +27,12 @@ EXPORT_DIRECTORY = None
 # Amount of days to scrape
 SCRAPE_RANGE = 0
 
+# configuration file
+CONFIG = None
+
+# JSON file containing current settings
+CURRENT_SETTINGS = None
+
 
 class ScrapeRange(enum.IntEnum):
     '''An enum that specifies the different range options for scraper.'''
@@ -35,8 +41,21 @@ class ScrapeRange(enum.IntEnum):
     ONE_WEEK = 3
 
 
+def change_settings(settings_filename):
+    global CURRENT_SETTINGS
+    try:
+        settings_file = etc.retrieve_JSON(settings_filename)
+    except FileNotFoundError:
+        print("ERROR: Settings file \"%s\" not found" % settings_filename)
+        return None
+
+    CURRENT_SETTINGS = settings_file
+
+    return CURRENT_SETTINGS
+
+
 def get_settings():
-    return etc.get_scraper_settings(etc.DEFAULT_SETTINGS_PATH)
+    return CURRENT_SETTINGS
 
 
 class ScrapeThreadWrapper():
@@ -616,6 +635,16 @@ class StdoutRedirector(object):
 
 
 def run_app():
+    # Load configuration
+    config = etc.retrieve_JSON('config.json')
+
+    # Load settings file
+    settings = change_settings(config['settings_path'])
+    if settings is None:
+        print("ERROR: Settings not found")
+        return
+
+    # Create root tkinter
     root = tk.Tk()
     root.title('GDI Scraper')
     root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
