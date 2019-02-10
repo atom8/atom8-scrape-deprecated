@@ -33,6 +33,10 @@ def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
         sub_data = response.json()['data']
 
         for post in sub_data['children']:
+
+            if verbose:
+                print('.', end='')
+
             post = post['data']
             creation_date = datetime.fromtimestamp(
                 time.mktime(time.localtime(post['created'])))
@@ -49,13 +53,13 @@ def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
         if after == 'null' or after is None:
             processing = False
 
-        if verbose:
-            print("\nAfter: {}\nLast Created: {}".format(after, creation_date))
+    if verbose:
+        print('')  # newline
 
     return posts
 
 
-def get_all_posts_from_subreddits(subreddits, days=7):
+def get_all_posts_from_subreddits(subreddits, days=7, verbose=False):
     # TODO different date ranges
 
     posts = []
@@ -64,6 +68,7 @@ def get_all_posts_from_subreddits(subreddits, days=7):
             subreddit=subreddit['name'],
             min_score=subreddit['min_karma'],
             days=days,
+            verbose=verbose
         )
         posts += subreddit_posts
     return posts
@@ -110,16 +115,17 @@ def scrape(subreddits, export_directory, verbose=False, days=7):
     if verbose:
         subreddits = etc.verbose_iter(subreddits, 'Scanning subreddits')
 
-    reddit_posts = get_all_posts_from_subreddits(subreddits, days)
+    reddit_posts = get_all_posts_from_subreddits(subreddits, days, verbose)
 
     # Extract post data and download files
     post_results = ''
 
     if verbose:
-        reddit_posts = etc.verbose_iter(
+        reddit_verb = etc.verbose_iter(
             reddit_posts, 'Downloading reddit images')
-
-    post_results = download_images(reddit_posts, export_directory)
+        post_results = download_images(reddit_verb, export_directory)
+    else:
+        post_results = download_images(reddit_posts, export_directory)
 
     # Export post data
     # TODO sort posts by highest karma
