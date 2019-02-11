@@ -1,0 +1,23 @@
+{
+    "all": {
+        "export_directory": "",
+        "last_scrape_date": ""
+    },
+    "reddit": {
+        "subreddits": [],
+        "enabled": false
+    },
+    "tigsource": {
+        "topics": [],
+        "enabled": false
+    },
+    "twitter": {
+        "users": [],
+        "enabled": false
+    },
+    "tumblr": {
+        "blogs": [],
+        "tags": [],
+        "enabled": false
+    }
+}

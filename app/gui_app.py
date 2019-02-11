@@ -64,11 +64,11 @@ class ScrapeThreadWrapper():
 
 def perform_scrape(export_directory, days):
     if export_directory is None or not export_directory:
-        print('[ERROR] ~ specify an export directory')
+        print('[ERROR] Specify an export directory')
         return
 
     if not os.path.isdir(export_directory):
-        print('[ERROR] ~ the export directory (%s) does not exist' %
+        print('[ERROR] Export directory (%s) does not exist' %
               export_directory)
         return
 
@@ -127,6 +127,8 @@ class MainApplication(tk.Frame):
         settings_frame.pack()
         self.settings_label = tk.Label(settings_frame)
         self.settings_label.pack(side='left', padx=10, pady=10)
+        tk.Button(settings_frame, text='New',
+                  command=self.do_new_options).pack(side='left')
         tk.Button(settings_frame, text='Change',
                   command=self.do_change_options).pack(side='right')
 
@@ -299,7 +301,7 @@ class MainApplication(tk.Frame):
             self.parse_options(new_options)
 
         except FileNotFoundError:
-            print("ERROR: Settings file \"%s\" not found" % options_filename)
+            print("[ERROR] Settings file \"%s\" not found" % options_filename)
             return None
 
         config.set_options(new_options, options_filename)
@@ -307,6 +309,14 @@ class MainApplication(tk.Frame):
         config.save_config()
 
         print("Settings changed -> %s" % options_filename)
+
+    def do_new_options(self):
+        options_save_destination = filedialog.asksaveasfilename()
+
+        config.new_options(options_save_destination)
+        self.parse_options(config.options)
+        self.set_options(options_save_destination)
+        config.save_config()
 
     def request_scrape(self):
         global EXPORT_DIRECTORY
