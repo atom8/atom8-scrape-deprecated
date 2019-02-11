@@ -30,6 +30,7 @@
 
     "tumblr":
     {
+        "blogs": ["gamedevinspo","conceptartista"],
         "tags":
         [
             {
