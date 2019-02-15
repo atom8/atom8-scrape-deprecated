@@ -8,6 +8,7 @@ queue.
 import click
 
 from . import etc
+from . import instagram as insta_control
 from . import reddit as reddit_control
 from . import tigsource as TIG_control
 from . import tumblr as tumblr_control
@@ -43,6 +44,10 @@ def all():
     settings = etc.retrieve_JSON('settings.json')
 
     # perform scrapes
+    click.secho('\nPerforming Instagram scrape', fg='yellow')
+    insta_control.scrape(
+        settings['instagram']['profiles'], export_directory, verbose=True)
+
     click.secho("\nPerforming Reddit scrape", fg='yellow')
     reddit_control.scrape(
         settings['reddit']['subreddits'], export_directory, verbose=True)

@@ -3,6 +3,10 @@
         "export_directory": "",
         "last_scrape_date": ""
     },
+    "instagram": {
+        "profiles": [],
+        "enabled": false
+    },
     "reddit": {
         "subreddits": [],
         "enabled": false

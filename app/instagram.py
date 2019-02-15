@@ -1,8 +1,7 @@
 import instaloader
 import os
-import etc
-
 from datetime import datetime, timedelta
+from . import etc
 
 
 def scrape(profiles, export_directory, days=7, verbose=False):
@@ -40,8 +39,8 @@ def scrape(profiles, export_directory, days=7, verbose=False):
             post.url, export_directory, post.shortcode + '.jpg')
 
 
-if __name__ == '__main__':
-    export_directory = etc.timestamp_directory(etc.find_desktop(), prefix='test')
-    etc.create_directory(export_directory)
+# if __name__ == '__main__':
+#     export_directory = etc.timestamp_directory(etc.find_desktop(), prefix='test')
+#     etc.create_directory(export_directory)
 
-    scrape(['gamedev.inspo'], export_directory, verbose=True)
+#     scrape(['gamedev.inspo'], export_directory, verbose=True)
