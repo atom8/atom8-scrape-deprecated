@@ -3,6 +3,12 @@
         "export_directory": "C:/Users/Shel/Desktop/exports",
         "last_scrape_date": "2019-02-04"
     },
+    "instagram": {
+        "profiles": [
+            "gamedev.inspo"
+        ],
+        "enabled": true
+    },
     "reddit": {
         "subreddits": [
             {
