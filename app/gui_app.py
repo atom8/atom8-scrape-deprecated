@@ -507,7 +507,72 @@ class MainApplication(tk.Frame):
         cancel_btn.grid(row=0, column=1)
 
     def open_tumblr_settings(self):
-        pass
+        diag = tk.Toplevel()
+        diag.wm_title("Tumblr settings")
+
+        tk.Label(diag, text="Blogs").pack()
+
+        # Add blog editting frame
+        blogs_frame = tk.Frame(diag)
+        blogs_frame.pack()
+
+        # get "topics" from app settings
+        blog_data = config.options['tumblr']['blogs']
+
+        # A list containing references to each entry.
+        blog_entries = []
+        row_x = 0
+        for blog_no in blog_data:
+            blog_entry = tk.Entry(blogs_frame)
+            blog_entry.insert(0, blog_no)
+            blog_entry.grid(row=row_x, column=0)
+            blog_entries.append(blog_entry)
+            row_x += 1
+
+        # add blog
+        def add_blog():
+            nonlocal blog_entries
+
+            # row index to insert into
+            row = len(blog_entries)
+
+            pending = tk.Entry(blogs_frame)
+            pending.grid(row=row, column=0)
+            blog_entries.append(pending)
+
+        # remove blog
+        def remove_blog():
+            pass
+
+        # Manip buttons
+        edit_buttons = tk.Frame(diag)
+        edit_buttons.pack()
+        add_btn = tk.Button(edit_buttons, text='Add', command=add_blog)
+        add_btn.grid(row=100, column=0)
+
+        # Apply settings
+        def apply_settings():
+            print(blog_entries)
+
+            blogs = []
+            for blog_entry in blog_entries:
+                if blog_entry.get().strip():
+                    blogs.append(blog_entry.get())
+
+            config.options['tumblr']['blogs'] = blogs
+            config.save_options()
+
+            diag.destroy()
+
+        # Add final buttons
+        exit_buttons = tk.Frame(diag)
+        exit_buttons.pack(side='bottom')
+        apply_btn = tk.Button(exit_buttons, text="Apply",
+                              command=apply_settings)
+        apply_btn.grid(row=0, column=0)
+        cancel_btn = tk.Button(exit_buttons, text='Cancel',
+                               command=diag.destroy)
+        cancel_btn.grid(row=0, column=1)
 
     def open_twitter_settings(self):
         diag = tk.Toplevel()
