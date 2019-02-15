@@ -40,7 +40,7 @@ def all():
     etc.create_directory(export_directory)
     # create_directory(export_directory, reddit)
 
-    settings = etc.get_scraper_settings('settings.json')
+    settings = etc.retrieve_JSON('settings.json')
 
     # perform scrapes
     click.secho("\nPerforming Reddit scrape", fg='yellow')
@@ -63,11 +63,22 @@ def all():
 
 
 @scraper.command()
+def instagram():
+    export_directory = determine_export_destination(prefix='instagram')
+    etc.create_directory(export_directory)
+
+    settings = etc.retrieve_JSON('settings.json')
+
+    insta_control.scrape(
+        settings['instagram']['profiles'], export_directory, verbose=True)
+
+
+@scraper.command()
 def reddit():
     export_directory = determine_export_destination(prefix='reddit')
     etc.create_directory(export_directory)
 
-    settings = etc.get_scraper_settings('settings.json')
+    settings = etc.retrieve_JSON('settings.json')
 
     reddit_control.scrape(
         settings['reddit']['subreddits'], export_directory, verbose=True)
@@ -78,7 +89,7 @@ def tigsource():
     export_directory = determine_export_destination(prefix='tigsource')
     etc.create_directory(export_directory)
 
-    settings = etc.get_scraper_settings('settings.json')
+    settings = etc.retrieve_JSON('settings.json')
 
     TIG_control.scrape(
         settings['tigsource']['topics'], export_directory, verbose=True)
@@ -89,7 +100,7 @@ def tumblr():
     export_directory = determine_export_destination(prefix='tigsource')
     etc.create_directory(export_directory)
 
-    settings = etc.get_scraper_settings('settings.json')
+    settings = etc.retrieve_JSON('settings.json')
 
     tumblr_control.scrape(
         settings['tumblr']['blogs'], export_directory, verbose=True)
@@ -100,7 +111,7 @@ def twitter():
     export_directory = determine_export_destination(prefix='twitter')
     etc.create_directory(export_directory)
 
-    settings = etc.get_scraper_settings('settings.json')
+    settings = etc.retrieve_JSON('settings.json')
 
     twitter_control.scrape(
         settings['twitter']['users'], export_directory, verbose=True)
