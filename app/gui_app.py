@@ -11,6 +11,7 @@ from tkinter import filedialog
 
 from .config import load_config
 from . import etc
+from . import instagram as insta_control
 from . import reddit as reddit_control
 from . import tigsource as tigsource_control
 from . import tumblr as tumblr_control
@@ -81,6 +82,13 @@ def perform_scrape(export_directory, days):
               timestamped_export_dir)
     except OSError:
         return
+
+    # Perform instagram scrape
+    if config.options['instagram']['enabled']:
+        print('Performing Instagram scrape')
+        insta_control.scrape(
+            config.options['instagram']['profiles'], timestamped_export_dir,
+            verbose=True, days=days)
 
     # Perform reddit scrape
     if config.options['reddit']['enabled']:
@@ -195,6 +203,25 @@ class MainApplication(tk.Frame):
         # Right division
         right_frame = tk.Frame(self, borderwidth=2, relief="groove")
         right_frame.pack(side='right', fill='both', padx=10, pady=10)
+
+        # Instagram
+        insta_frame = tk.Frame(right_frame)
+        insta_frame.pack(pady=5)
+        insta_label = tk.Label(insta_frame, text='Instagram')
+        insta_label.pack()
+
+        self.insta_enabled = False
+        self.insta_status_label = tk.Label(insta_frame)
+        self.insta_status_label.pack()
+
+        insta_btns = tk.Frame(insta_frame)
+        insta_btns.pack()
+        open_insta_settings_btn = tk.Button(insta_btns, text='config')
+        open_insta_settings_btn.config(command=self.open_insta_settings)
+        open_insta_settings_btn.grid(row=0, column=0)
+        toggle_insta_btn = tk.Button(insta_btns, text='toggle')
+        toggle_insta_btn.config(command=self.toggle_insta)
+        toggle_insta_btn.grid(row=0, column=1)
 
         # Reddit
         reddit_frame = tk.Frame(right_frame)
@@ -351,6 +378,9 @@ class MainApplication(tk.Frame):
 
         EXPORT_DIRECTORY = self.export_directory
         REQUEST_SCRAPE = True
+
+    def open_insta_settings(self):
+        pass
 
     def open_reddit_settings(self):
         # TODO backup settings
@@ -645,6 +675,7 @@ class MainApplication(tk.Frame):
     def parse_options(self, options):
         self.set_export_directory(options['all']['export_directory'])
         self.set_last_scrape_on(options['all']['last_scrape_date'])
+        self.set_insta_status(options['instagram']['enabled'])
         self.set_reddit_status(options['reddit']['enabled'])
         self.set_tumblr_status(options['tumblr']['enabled'])
         self.set_tigsource_status(options['tigsource']['enabled'])
@@ -662,6 +693,10 @@ class MainApplication(tk.Frame):
         self.settings_label.config(
             text='Current options configuration: %s' % options_path
         )
+
+    def set_insta_status(self, enabled):
+        self.insta_enabled = enabled
+        self.set_backend_status(enabled, 'instagram', self.insta_status_label)
 
     def set_reddit_status(self, enabled):
         self.reddit_enabled = enabled
@@ -690,6 +725,14 @@ class MainApplication(tk.Frame):
             print('Backend disabled: ' + setting_name)
 
         label.config(text=status, bg=color)
+
+    def toggle_insta(self):
+        self.insta_enabled = not self.insta_enabled
+        self.set_backend_status(
+            self.insta_enabled, 'instagram', self.insta_status_label)
+
+        config.options['instagram']['enabled'] = self.insta_enabled
+        config.save_options()
 
     def toggle_reddit(self):
         self.reddit_enabled = not self.reddit_enabled
