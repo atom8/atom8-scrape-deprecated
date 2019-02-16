@@ -1,4 +1,3 @@
-import json
 import os
 import requests
 import time
@@ -6,7 +5,7 @@ from datetime import datetime, timedelta
 from . import etc
 
 
-def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
+def get_subreddit_posts(subreddit, min_karma, days=7, verbose=False):
     '''
     Retrieve posts from a subreddit
     '''
@@ -44,7 +43,7 @@ def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
             if creation_date < expire_date:
                 processing = False
                 break
-            elif min_score and post['ups'] < min_score:
+            elif post['ups'] < min_karma:
                 continue
             else:
                 posts.append(post)
@@ -59,28 +58,10 @@ def get_posts_by_date(subreddit, days=7, min_score=None, verbose=False):
     return posts
 
 
-def get_all_posts_from_subreddits(subreddits, days=7, verbose=False):
-    # TODO different date ranges
-
-    posts = []
-    for subreddit in subreddits:
-        subreddit_posts = get_posts_by_date(
-            subreddit=subreddit['name'],
-            min_score=subreddit['min_karma'],
-            days=days,
-            verbose=verbose
-        )
-        posts += subreddit_posts
-    return posts
-
-
 def download_images(posts, export_directory):
-    post_num = 0
-    post_info = ''
-
     for post in posts:
-        post_num += 1
         try:
+            post_name = post['permalink'].split('/')[-2]
             post_url = post['url']
             post_domain = post['domain']
 
@@ -92,55 +73,32 @@ def download_images(posts, export_directory):
             _, extension = os.path.splitext(post_url)
             if extension is not None:
                 etc.download_image_from_url(post_url, export_directory,
-                                            str(post_num) + extension)
+                                            post_name + extension)
             else:
                 etc.download_image_from_url(post_url, export_directory)
 
-            post_info += "{:>3}\t{}\n{}\n{}\n\n".format(
-                post_num, post['author'],
-                post['permalink'].encode('utf-8'),
-                post_url)
         except (FileNotFoundError, OSError):
             pass
-
-    return post_info
 
 
 def scrape(subreddits, export_directory, verbose=False, days=7):
     """Perform reddit scrape routine."""
 
-    # Retrieve reddit posts
-    reddit_posts = []
-
     if verbose:
         subreddits = etc.verbose_iter(subreddits, 'Scanning subreddits')
 
-    reddit_posts = get_all_posts_from_subreddits(subreddits, days, verbose)
-
-    # Extract post data and download files
-    post_results = ''
-
-    if verbose:
-        reddit_verb = etc.verbose_iter(
-            reddit_posts, 'Downloading reddit images')
-        post_results = download_images(reddit_verb, export_directory)
-    else:
-        post_results = download_images(reddit_posts, export_directory)
-
-    # Export post data
-    # TODO sort posts by highest karma
-    with open(os.path.join(export_directory, 'export_reddit.json'), 'w') as f:
-        json.dump(reddit_posts, f, indent=4)
-
-    # Export post_results
-    with open(os.path.join(export_directory, 'export_reddit.txt'), 'w') as f:
-        f.write(post_results)
-
-
-def trim_posts_under_score(posts, thresh):
+    # Retrieve reddit posts
     posts = []
-    for post in posts:
-        post = post['data']
-        if post['ups'] >= thresh:
-            posts.append(post)
-    return posts
+    for subreddit in subreddits:
+        posts += get_subreddit_posts(
+            subreddit=subreddit['name'],
+            min_karma=subreddit['min_karma'],
+            days=days,
+            verbose=verbose
+        )
+
+    # Download files
+    if verbose:
+        posts = etc.verbose_iter(posts, 'Downloading reddit images')
+
+    download_images(posts, export_directory)
