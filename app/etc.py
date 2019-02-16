@@ -32,11 +32,11 @@ def download_image_from_url(url, directory, filename=None):
         filename = url.split('/')[-1]
 
     # check if filename exists, if so: append a unique number to it
-    base_filename = filename
+    base_filename, ext = os.path.splitext(filename)
     x = 0
     while filename in os.listdir(directory):
         x += 1
-        filename = base_filename + str(x)
+        filename = base_filename + str(x) + ext
 
     try:
         urllib.request.urlretrieve(url, os.path.join(directory, filename))

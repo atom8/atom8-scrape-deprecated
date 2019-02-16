@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from . import etc
 
 
-def scrape(profiles, export_directory, days=7, verbose=False):
+def scrape(profiles, export_directory, days=7, verbose=True):
 
     L = instaloader.Instaloader()
 
@@ -37,10 +37,3 @@ def scrape(profiles, export_directory, days=7, verbose=False):
         _, ext = os.path.splitext(post.url)
         etc.download_image_from_url(
             post.url, export_directory, post.shortcode + '.jpg')
-
-
-# if __name__ == '__main__':
-#     export_directory = etc.timestamp_directory(etc.find_desktop(), prefix='test')
-#     etc.create_directory(export_directory)
-
-#     scrape(['gamedev.inspo'], export_directory, verbose=True)

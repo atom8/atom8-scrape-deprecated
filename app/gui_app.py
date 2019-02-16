@@ -88,35 +88,35 @@ def perform_scrape(export_directory, days):
         print('Performing Instagram scrape')
         insta_control.scrape(
             config.options['instagram']['profiles'], timestamped_export_dir,
-            verbose=True, days=days)
+            days=days)
 
     # Perform reddit scrape
     if config.options['reddit']['enabled']:
         print('Performing Reddit scrape')
         reddit_control.scrape(
             config.options['reddit']['subreddits'], timestamped_export_dir,
-            verbose=True, days=days)
+            days=days)
 
     # Perform tigsource scrape
     if config.options['tigsource']['enabled']:
         print('Performing TIGsource scrape')
         tigsource_control.scrape(
             config.options['tigsource']['topics'], timestamped_export_dir,
-            verbose=True, days=days)
+            days=days)
 
     # Perform tumblr scrape
     if config.options['tumblr']['enabled']:
         print('Performing tumblr scrape')
         tumblr_control.scrape(
             config.options['tumblr']['blogs'], timestamped_export_dir,
-            verbose=True, days=days)
+            days=days)
 
     # Perform twitter scrape
     if config.options['twitter']['enabled']:
         print('Performing Twitter scrape')
         twitter_control.scrape(
             config.options['twitter']['users'], timestamped_export_dir,
-            verbose=True, days=days)
+            days=days)
 
     config.options['all']['last_scrape_date'] = str(datetime.now().date())
     config.save_options()

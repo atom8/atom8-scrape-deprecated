@@ -12,7 +12,7 @@ BASE_TUMBLR_REQUEST = \
     '&start={1}'
 
 
-def retrieve_tumblr_blog_photo_posts(tumblr_blog, verbose=False, days=7):
+def retrieve_tumblr_blog_photo_posts(tumblr_blog, days=7, verbose=True):
     '''
     Retrive posts from a tumblr blog
     '''
@@ -68,7 +68,7 @@ def retrieve_tumblr_blog_photo_posts(tumblr_blog, verbose=False, days=7):
     return image_URLs
 
 
-def scrape(tumblr_blogs, export_directory, verbose=False, days=7):
+def scrape(tumblr_blogs, export_directory, days=7, verbose=True):
     # BASE_REQUEST = 'http://thecollectibles.tumblr.com'
 
     if verbose:
@@ -88,13 +88,3 @@ def scrape(tumblr_blogs, export_directory, verbose=False, days=7):
 
         etc.download_image_from_url(
             tumblr_post['url'], export_directory, tumblr_post['id'] + ext)
-
-
-# if __name__ == '__main__':
-#     TEST_BLOGS = ['thecollectibles', 'gamedevinspo']
-
-#     export_directory = etc.timestamp_directory(
-#         etc.find_desktop(), prefix='tumblr')
-#     etc.create_directory(export_directory)
-
-#     scrape(TEST_BLOGS, export_directory, verbose=True)

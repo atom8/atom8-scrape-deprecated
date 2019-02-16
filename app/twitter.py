@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from . import etc
 
 
-def scrape(users, export_directory, verbose=False, days=7):
+def scrape(users, export_directory, days=7, verbose=True):
 
     expire_date = datetime.now() - timedelta(days=days)
 
@@ -38,7 +38,3 @@ def scrape(users, export_directory, verbose=False, days=7):
     for photo in photos:
         photo_name = photo.split('/')[-1]
         etc.download_image_from_url(photo, export_directory, photo_name)
-
-
-if __name__ == '__main__':
-    scrape()

@@ -39,30 +39,31 @@ def scraper():
 def all():
     export_directory = determine_export_destination()
     etc.create_directory(export_directory)
-    # create_directory(export_directory, reddit)
+
+    days = click.prompt('How many days to scrape', type=int, default=7)
 
     settings = etc.retrieve_JSON('settings.json')
 
     # perform scrapes
     click.secho('\nPerforming Instagram scrape', fg='yellow')
     insta_control.scrape(
-        settings['instagram']['profiles'], export_directory, verbose=True)
+        settings['instagram']['profiles'], export_directory, days=days)
 
     click.secho("\nPerforming Reddit scrape", fg='yellow')
     reddit_control.scrape(
-        settings['reddit']['subreddits'], export_directory, verbose=True)
+        settings['reddit']['subreddits'], export_directory, days=days)
 
     click.secho("\nPerforming TIGSource scrape", fg='yellow')
     TIG_control.scrape(
-        settings['tigsource']['topics'], export_directory, verbose=True)
+        settings['tigsource']['topics'], export_directory, days=days)
 
     click.secho("\nPerforming Tumblr scrape", fg='yellow')
     tumblr_control.scrape(
-        settings['tumblr']['blogs'], export_directory, verbose=True)
+        settings['tumblr']['blogs'], export_directory, days=days)
 
     click.secho("\nPerforming Twitter scrape", fg='yellow')
     twitter_control.scrape(
-        settings['twitter']['users'], export_directory, verbose=True)
+        settings['twitter']['users'], export_directory, days=days)
 
     click.secho("\nTASK COMPLETE!", fg='green')
 
@@ -75,7 +76,7 @@ def instagram():
     settings = etc.retrieve_JSON('settings.json')
 
     insta_control.scrape(
-        settings['instagram']['profiles'], export_directory, verbose=True)
+        settings['instagram']['profiles'], export_directory)
 
 
 @scraper.command()
@@ -86,7 +87,7 @@ def reddit():
     settings = etc.retrieve_JSON('settings.json')
 
     reddit_control.scrape(
-        settings['reddit']['subreddits'], export_directory, verbose=True)
+        settings['reddit']['subreddits'], export_directory)
 
 
 @scraper.command()
@@ -97,7 +98,7 @@ def tigsource():
     settings = etc.retrieve_JSON('settings.json')
 
     TIG_control.scrape(
-        settings['tigsource']['topics'], export_directory, verbose=True)
+        settings['tigsource']['topics'], export_directory)
 
 
 @scraper.command()
@@ -108,7 +109,7 @@ def tumblr():
     settings = etc.retrieve_JSON('settings.json')
 
     tumblr_control.scrape(
-        settings['tumblr']['blogs'], export_directory, verbose=True)
+        settings['tumblr']['blogs'], export_directory)
 
 
 @scraper.command()
@@ -119,4 +120,4 @@ def twitter():
     settings = etc.retrieve_JSON('settings.json')
 
     twitter_control.scrape(
-        settings['twitter']['users'], export_directory, verbose=True)
+        settings['twitter']['users'], export_directory)

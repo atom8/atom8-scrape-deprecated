@@ -5,7 +5,30 @@ from datetime import datetime, timedelta
 from . import etc
 
 
-def get_subreddit_posts(subreddit, min_karma, days=7, verbose=False):
+def download_images(posts, export_directory):
+    for post in posts:
+        try:
+            post_name = post['permalink'].split('/')[-2]
+            post_url = post['url']
+            post_domain = post['domain']
+
+            if post_domain == 'gfycat.com':
+                post_url = post_url[:8] + 'zippy.' + post_url[8:] + '.webm'
+            if post_url.endswith('gifv'):
+                post_url = post_url[:-4] + 'mp4'
+
+            _, extension = os.path.splitext(post_url)
+            if extension is not None:
+                etc.download_image_from_url(post_url, export_directory,
+                                            post_name + extension)
+            else:
+                etc.download_image_from_url(post_url, export_directory)
+
+        except (FileNotFoundError, OSError):
+            pass
+
+
+def get_subreddit_posts(subreddit, min_karma, days=7, verbose=True):
     '''
     Retrieve posts from a subreddit
     '''
@@ -58,30 +81,7 @@ def get_subreddit_posts(subreddit, min_karma, days=7, verbose=False):
     return posts
 
 
-def download_images(posts, export_directory):
-    for post in posts:
-        try:
-            post_name = post['permalink'].split('/')[-2]
-            post_url = post['url']
-            post_domain = post['domain']
-
-            if post_domain == 'gfycat.com':
-                post_url = post_url[:8] + 'zippy.' + post_url[8:] + '.webm'
-            if post_url.endswith('gifv'):
-                post_url = post_url[:-4] + 'mp4'
-
-            _, extension = os.path.splitext(post_url)
-            if extension is not None:
-                etc.download_image_from_url(post_url, export_directory,
-                                            post_name + extension)
-            else:
-                etc.download_image_from_url(post_url, export_directory)
-
-        except (FileNotFoundError, OSError):
-            pass
-
-
-def scrape(subreddits, export_directory, verbose=False, days=7):
+def scrape(subreddits, export_directory, days=7, verbose=True):
     """Perform reddit scrape routine."""
 
     if verbose:
