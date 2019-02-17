@@ -16,7 +16,7 @@ def create_directory(directory_path):
             raise OSError('Folder already exists')
 
 
-def download_image_from_url(url, directory, filename=None):
+def download_image_from_url(url, directory, filename=None, metadata=None):
     """Download an image from a URL.
 
     Args:
@@ -42,6 +42,18 @@ def download_image_from_url(url, directory, filename=None):
         urllib.request.urlretrieve(url, os.path.join(directory, filename))
     except (OSError, urllib.error.HTTPError):
         print('[ERROR] Could not download: ' + url)
+
+    # Save image metadata as a seperate file because PNG wanted to be a dink
+    # and not specify any standard for saving image metadata.. WHY, why would
+    # they allow this.
+
+    if metadata is not None:
+        metadata_filename, _ = os.path.splitext(filename)
+        metadata_filename += '.meta'
+        export_JSON(
+            os.path.join(directory, metadata_filename), metadata)
+
+    return filename
 
 
 def export_JSON(export_destination, json_dict):

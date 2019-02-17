@@ -5,6 +5,11 @@ from datetime import datetime, timedelta
 from . import etc
 
 
+def get_creation_date(reddit_post_created):
+    return datetime.fromtimestamp(
+                time.mktime(time.localtime(reddit_post_created)))
+
+
 def download_images(posts, export_directory):
     for post in posts:
         try:
@@ -19,10 +24,23 @@ def download_images(posts, export_directory):
 
             _, extension = os.path.splitext(post_url)
             if extension is not None:
+                post_name += extension
+
+            metadata = {
+                'author': post['author'],
+                'date': str(get_creation_date(post['created'])),
+                'ref': post_name,
+                'source': 'http://reddit.com' + post['permalink'],
+                'title': post['title'],
+            }
+
+            if extension is not None:
                 etc.download_image_from_url(post_url, export_directory,
-                                            post_name + extension)
+                                            post_name + extension,
+                                            metadata=metadata)
             else:
-                etc.download_image_from_url(post_url, export_directory)
+                etc.download_image_from_url(post_url, export_directory,
+                                            post_name, metadata=metadata)
 
         except (FileNotFoundError, OSError):
             pass
@@ -60,8 +78,7 @@ def get_subreddit_posts(subreddit, min_karma, days=7, verbose=True):
                 print('.', end='')
 
             post = post['data']
-            creation_date = datetime.fromtimestamp(
-                time.mktime(time.localtime(post['created'])))
+            creation_date = get_creation_date(post['created'])
 
             if creation_date < expire_date:
                 processing = False

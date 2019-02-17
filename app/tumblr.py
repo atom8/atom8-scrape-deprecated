@@ -49,14 +49,25 @@ def retrieve_tumblr_blog_photo_posts(tumblr_blog, days=7, verbose=True):
                 processing = False
                 break
 
+            # caption
+            caption = post.find('photo-caption')
+            if caption is not None:
+                caption = caption.text
+            else:
+                caption = ''
+
             # ignore anything without a photo-url
             photo_url = post.find('photo-url')
             if photo_url is None:
                 continue
 
+            _, ext = os.path.splitext(photo_url.text)
             post_info = {
-                'id': post['id'],
-                'url': post.find('photo-url').text
+                'author': tumblr_blog,
+                'date': str(posted_on),
+                'ref': post['id'] + ext,
+                'source': photo_url.text,
+                'text': caption
             }
             image_URLs.append(post_info)
 
@@ -69,8 +80,6 @@ def retrieve_tumblr_blog_photo_posts(tumblr_blog, days=7, verbose=True):
 
 
 def scrape(tumblr_blogs, export_directory, days=7, verbose=True):
-    # BASE_REQUEST = 'http://thecollectibles.tumblr.com'
-
     if verbose:
         tumblr_blogs = etc.verbose_iter(tumblr_blogs, 'Scanning tumblr blogs')
 
@@ -84,7 +93,6 @@ def scrape(tumblr_blogs, export_directory, days=7, verbose=True):
             tumblr_posts, 'Downloading tumblr images')
 
     for tumblr_post in tumblr_posts:
-        _, ext = os.path.splitext(tumblr_post['url'])
-
         etc.download_image_from_url(
-            tumblr_post['url'], export_directory, tumblr_post['id'] + ext)
+            tumblr_post['source'], export_directory, tumblr_post['ref'],
+            metadata=tumblr_post)

@@ -24,8 +24,21 @@ def scrape(users, export_directory, days=7, verbose=True):
             tweet_time = tweet.get('time')
             if tweet_time > expire_date:
                 tweet_photos = tweet.get('entries').get('photos')
+
                 if tweet_photos:
-                    photos += tweet_photos
+                    for photo_url in tweet_photos:
+                        photo_name = photo_url.split('/')[-1]
+
+                        meta = {
+                            'author': user,
+                            'date': str(tweet_time),
+                            'ref': photo_name,
+                            'source': photo_url,
+                            'text': tweet['text']
+                        }
+
+                        photos.append(meta)
+
             elif not first_tweet:
                 break
             first_tweet = False
@@ -35,6 +48,7 @@ def scrape(users, export_directory, days=7, verbose=True):
 
     if verbose:
         photos = etc.verbose_iter(photos, 'Downloading twitter images')
-    for photo in photos:
-        photo_name = photo.split('/')[-1]
-        etc.download_image_from_url(photo, export_directory, photo_name)
+
+    for photo_meta in photos:
+        etc.download_image_from_url(photo_meta['source'], export_directory,
+                                    photo_meta['ref'], metadata=photo_meta)

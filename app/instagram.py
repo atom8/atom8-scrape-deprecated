@@ -1,5 +1,4 @@
 import instaloader
-import os
 from datetime import datetime, timedelta
 from . import etc
 
@@ -34,6 +33,16 @@ def scrape(profiles, export_directory, days=7, verbose=True):
             pending_posts, 'Downloading insta photos')
 
     for post in pending_posts:
-        _, ext = os.path.splitext(post.url)
+        post_name = post.shortcode + '.jpg'
+
+        metadata = {
+            'author': post.owner_username,
+            'date': str(post.date),
+            'ref': post_name,
+            'source': 'http://instagram.com/p/' + post.shortcode,
+            'text': post.caption
+        }
+
         etc.download_image_from_url(
-            post.url, export_directory, post.shortcode + '.jpg')
+            post.url, export_directory, post_name,
+            metadata=metadata)
