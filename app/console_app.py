@@ -15,6 +15,10 @@ from . import tumblr as tumblr_control
 from . import twitter as twitter_control
 
 
+def determine_days():
+    return click.prompt('How many days to scrape', type=int, default=1)
+
+
 def determine_export_destination(prefix='export'):
     # prompt user for export directory
     requested_export_directory_path = click.prompt(
@@ -40,7 +44,7 @@ def all():
     export_directory = determine_export_destination()
     etc.create_directory(export_directory)
 
-    days = click.prompt('How many days to scrape', type=int, default=7)
+    days = determine_days()
 
     settings = etc.retrieve_JSON('settings.json')
 
@@ -73,10 +77,12 @@ def instagram():
     export_directory = determine_export_destination(prefix='instagram')
     etc.create_directory(export_directory)
 
+    days = determine_days()
+
     settings = etc.retrieve_JSON('settings.json')
 
     insta_control.scrape(
-        settings['instagram']['profiles'], export_directory)
+        settings['instagram']['profiles'], export_directory, days=days)
 
 
 @scraper.command()
@@ -84,10 +90,12 @@ def reddit():
     export_directory = determine_export_destination(prefix='reddit')
     etc.create_directory(export_directory)
 
+    days = determine_days()
+
     settings = etc.retrieve_JSON('settings.json')
 
     reddit_control.scrape(
-        settings['reddit']['subreddits'], export_directory)
+        settings['reddit']['subreddits'], export_directory, days=days)
 
 
 @scraper.command()
@@ -95,21 +103,25 @@ def tigsource():
     export_directory = determine_export_destination(prefix='tigsource')
     etc.create_directory(export_directory)
 
+    days = determine_days()
+
     settings = etc.retrieve_JSON('settings.json')
 
     TIG_control.scrape(
-        settings['tigsource']['topics'], export_directory)
+        settings['tigsource']['topics'], export_directory, days=days)
 
 
 @scraper.command()
 def tumblr():
-    export_directory = determine_export_destination(prefix='tigsource')
+    export_directory = determine_export_destination(prefix='tumblr')
     etc.create_directory(export_directory)
+
+    days = determine_days()
 
     settings = etc.retrieve_JSON('settings.json')
 
     tumblr_control.scrape(
-        settings['tumblr']['blogs'], export_directory)
+        settings['tumblr']['blogs'], export_directory, days=days)
 
 
 @scraper.command()
@@ -117,7 +129,9 @@ def twitter():
     export_directory = determine_export_destination(prefix='twitter')
     etc.create_directory(export_directory)
 
+    days = determine_days()
+
     settings = etc.retrieve_JSON('settings.json')
 
     twitter_control.scrape(
-        settings['twitter']['users'], export_directory)
+        settings['twitter']['users'], export_directory, days=days)
