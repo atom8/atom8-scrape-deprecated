@@ -9,6 +9,7 @@ cssselect==1.0.3
 fake-useragent==0.1.11
 future==0.17.1
 idna==2.8
+instaloader==4.2.3
 lxml==4.3.0
 oauthlib==3.0.1
 parse==1.11.1
