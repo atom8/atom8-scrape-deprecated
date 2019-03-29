@@ -14,7 +14,13 @@ def scrape(profiles, export_directory, days=7, verbose=True):
 
     pending_posts = []
     for profile in profiles:
-        p = instaloader.Profile.from_username(L.context, profile)
+        p = None
+        try:
+            p = instaloader.Profile.from_username(L.context, profile)
+        except instaloader.exceptions.ProfileNotExistsException:
+            print("[WARN] Profile does not exist: '%s'." % profile)
+            continue
+
         posts = p.get_posts()
         for post in posts:
             if verbose:
