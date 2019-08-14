@@ -25,12 +25,12 @@
     
     "tigsource":
     {
-        "topics": ["167", "632", "3993", "4960", "7091", "24094", "32077"]
+        "topics": ["167", "632"]
     },
 
     "tumblr":
     {
-        "blogs": ["gamedevinspo","conceptartista"],
+        "blogs": ["shelsoloa", "gamedevinspo"],
         "tags":
         [
             {
@@ -42,6 +42,6 @@
 
     "twitter": 
     {
-        "users": ["_shellbot_", "NoelFB"]
+        "users": ["shelsoloa", "GameDevInspo"]
     }
 }
