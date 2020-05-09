@@ -6,7 +6,7 @@ images from the web to be processed by Atom8 Curate.
 
 import click
 
-from atom8scrape import etc, integrations
+from . import etc, integrations
 
 
 def load_settings(ctx, path):
