@@ -2,7 +2,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from . import etc
+from .. import etc
 
 # Provides access to tumblr blog and returns 25 of photo posts starting from
 # a variable index.

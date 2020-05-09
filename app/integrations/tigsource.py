@@ -2,7 +2,7 @@ import re
 import lxml.html
 import requests
 from datetime import datetime, timedelta
-from . import etc
+from .. import etc
 
 
 MAX_POST_CAP = 2**16

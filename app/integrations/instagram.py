@@ -1,6 +1,6 @@
 import instaloader
 from datetime import datetime, timedelta
-from . import etc
+from .. import etc
 
 
 def scrape(profiles, export_directory, days=7, verbose=True):

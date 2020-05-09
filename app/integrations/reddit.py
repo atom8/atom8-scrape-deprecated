@@ -2,7 +2,7 @@ import os
 import requests
 import time
 from datetime import datetime, timedelta
-from . import etc
+from .. import etc
 
 
 def get_creation_date(reddit_post_created):

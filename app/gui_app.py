@@ -11,11 +11,11 @@ from tkinter import filedialog
 
 from .config import load_config
 from . import etc
-from . import instagram as insta_control
-from . import reddit as reddit_control
-from . import tigsource as tigsource_control
-from . import tumblr as tumblr_control
-from . import twitter as twitter_control
+from .integrations import instagram as insta_control
+from .integrations import reddit as reddit_control
+from .integrations import tigsource as tigsource_control
+from .integrations import tumblr as tumblr_control
+from .integrations import twitter as twitter_control
 
 # App config
 config = None

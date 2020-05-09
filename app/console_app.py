@@ -8,11 +8,11 @@ queue.
 import click
 
 from . import etc
-from . import instagram as insta_control
-from . import reddit as reddit_control
-from . import tigsource as TIG_control
-from . import tumblr as tumblr_control
-from . import twitter as twitter_control
+from .integrations import instagram as insta_control
+from .integrations import reddit as reddit_control
+from .integrations import tigsource as TIG_control
+from .integrations import tumblr as tumblr_control
+from .integrations import twitter as twitter_control
 
 
 def determine_days():

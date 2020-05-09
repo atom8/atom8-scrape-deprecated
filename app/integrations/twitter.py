@@ -1,6 +1,6 @@
 import twitter_scraper
 from datetime import datetime, timedelta
-from . import etc
+from .. import etc
 
 
 def scrape(users, export_directory, days=7, verbose=True):
