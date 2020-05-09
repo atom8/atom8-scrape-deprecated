@@ -77,6 +77,9 @@ def find_desktop():
 def retrieve_JSON(filename):
     """Retrieve JSON file as dict.
 
+    We do not test for errors here, we all the function to fail upward so that
+    handling can take place where the retrieve is required.
+
     Args:
         filename (str): the path to the JSON file.
 
@@ -89,7 +92,7 @@ def retrieve_JSON(filename):
     return json_data
 
 
-def timestamp_directory(directory_path, prefix='export'):
+def prepend_timestamp_directory(directory_path, prefix='export'):
     """Returns a timestamped directory path."""
     t = time.time()
     timestamp = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d_%H%M%S')

@@ -1,137 +1,132 @@
-"""GDI Scraper utility
+"""Atom8 Scrape - Command Line Interface
 
-The GDI Scraper utility scrapes images from the web to be processed for the GDI
-queue.
-
+A CLI tool used to operate Atom8 Scrape integrations. These integrations scrape
+images from the web to be processed by Atom8 Curate.
 """
 
 import click
 
-from . import etc
-from .integrations import instagram as insta_control
-from .integrations import reddit as reddit_control
-from .integrations import tigsource as TIG_control
-from .integrations import tumblr as tumblr_control
-from .integrations import twitter as twitter_control
+from atom8scrape import etc, integrations
 
 
-def determine_days():
-    return click.prompt('How many days to scrape', type=int, default=1)
+def load_settings(ctx, path):
+    """Load settings from a provided path. Will abort if settings is not found.
+
+    Args:
+        ctx (click.Context)
+
+        path (str): path to settings
+    """
+    try:
+        settings_file = etc.retrieve_JSON(path)
+    except FileNotFoundError:
+        ctx.fail("File not found")
+
+    return settings_file
 
 
-def determine_export_destination(prefix='export'):
-    # prompt user for export directory
-    requested_export_directory_path = click.prompt(
-        'Specify directory to export to (defaults to desktop)',
-        type=str, default='')
-
-    # use desktop by default
-    if requested_export_directory_path == '':
-        export_directory_path = etc.find_desktop()
-    else:
-        export_directory_path = requested_export_directory_path
-
-    return etc.timestamp_directory(export_directory_path, prefix=prefix)
+def vecho(ctx, message, **kwargs):
+    """Print, using echo, if verbose is true"""
+    if ctx.obj.get('verbose'):
+        click.secho(message, **kwargs)
 
 
 @click.group()
-def scraper():
-    pass
+@click.option('-v', '--verbose', default=False, is_flag=True)
+@click.pass_context
+def main(ctx, verbose):
+    """atom8 - scrape
+
+    Scrape from popular social media websites using various conditions and
+    export to target directory.
+    """
+
+    # Verify context exists
+    ctx.ensure_object(dict)
+
+    # Verbosity
+    ctx.obj['verbose'] = verbose
 
 
-@scraper.command()
-def all():
-    export_directory = determine_export_destination()
+@main.command()
+@click.option('-s', '--settings', default=None, help='use a settings file')
+@click.pass_context
+def gui(ctx, settings):
+    """Launch the GUI editor"""
+    from atom8scrape import gui
+
+    if settings is not None:
+        vecho(ctx, "Loading settings: %s" % settings)
+        # TODO gui.run_app(settings=load_settings(ctx, settings))
+    gui.run_app()
+
+
+@main.command()
+@click.option('-e', '--exportdir', default='desktop',
+              help='specify export directory (desktop)')
+@click.option('-d', '--depth', default=3,
+              help='number of days to scrape (3)')
+@click.argument('settings_path', nargs=1, type=click.Path(exists=True),
+                required=True)
+@click.argument('target', nargs=-1, required=True)
+@click.pass_context
+def scrape(ctx, exportdir, depth, settings_path, target):
+    """Perform scrape.
+
+    Requires a settings file.
+    """
+
+    # Load settings
+    vecho(ctx, "Loading settings: %s" % settings_path, fg='magenta')
+    settings = load_settings(ctx, settings_path)
+
+    # Determine export directory
+    if exportdir == 'desktop' or exportdir == '':
+        exportdir = etc.find_desktop()
+    export_directory = etc.prepend_timestamp_directory(exportdir)
+    ctx.obj['export_directory'] = export_directory
+
+    # Save the duration to context
+    ctx.obj['depth'] = depth
+
+    # Create export directory (print, if verbose)
+    vecho(ctx, "Creating export directory at: %s" % export_directory,
+          fg='magenta')
     etc.create_directory(export_directory)
 
-    days = determine_days()
+    #
+    # BEGIN SCRAPING
+    #
 
-    settings = etc.retrieve_JSON('settings.json')
+    vecho(ctx, "START SCRAPE", fg='yellow')
 
-    # perform scrapes
-    click.secho('\nPerforming Instagram scrape', fg='yellow')
-    insta_control.scrape(
-        settings['instagram']['profiles'], export_directory, days=days)
+    scrape_all = 'all' in target
+    if scrape_all:
+        vecho(ctx, "Scraping all integrations", fg='yellow')
 
-    click.secho("\nPerforming Reddit scrape", fg='yellow')
-    reddit_control.scrape(
-        settings['reddit']['subreddits'], export_directory, days=days)
+    if 'instagram' in target or scrape_all:
+        vecho(ctx, '\nPerforming Instagram scrape', fg='yellow')
+        integrations.instagram.scrape(
+            settings['instagram']['profiles'], export_directory, days=depth)
 
-    click.secho("\nPerforming TIGSource scrape", fg='yellow')
-    TIG_control.scrape(
-        settings['tigsource']['topics'], export_directory, days=days)
+    if 'reddit' in target or scrape_all:
+        vecho(ctx, "\nPerforming Reddit scrape", fg='yellow')
+        integrations.reddit.scrape(
+            settings['reddit']['subreddits'], export_directory, days=depth)
 
-    click.secho("\nPerforming Tumblr scrape", fg='yellow')
-    tumblr_control.scrape(
-        settings['tumblr']['blogs'], export_directory, days=days)
+    if 'tigsource' in target or scrape_all:
+        vecho(ctx, "\nPerforming TIGSource scrape", fg='yellow')
+        integrations.tigsource.scrape(
+            settings['tigsource']['topics'], export_directory, days=depth)
 
-    click.secho("\nPerforming Twitter scrape", fg='yellow')
-    twitter_control.scrape(
-        settings['twitter']['users'], export_directory, days=days)
+    if 'tumblr' in target or scrape_all:
+        vecho(ctx, "\nPerforming Tumblr scrape", fg='yellow')
+        integrations.tumblr.scrape(
+            settings['tumblr']['blogs'], export_directory, days=depth)
 
-    click.secho("\nTASK COMPLETE!", fg='green')
+    if 'twitter' in target or scrape_all:
+        vecho(ctx, "\nPerforming Twitter scrape", fg='yellow')
+        integrations.twitter.scrape(
+            settings['twitter']['users'], export_directory, days=depth)
 
-
-@scraper.command()
-def instagram():
-    export_directory = determine_export_destination(prefix='instagram')
-    etc.create_directory(export_directory)
-
-    days = determine_days()
-
-    settings = etc.retrieve_JSON('settings.json')
-
-    insta_control.scrape(
-        settings['instagram']['profiles'], export_directory, days=days)
-
-
-@scraper.command()
-def reddit():
-    export_directory = determine_export_destination(prefix='reddit')
-    etc.create_directory(export_directory)
-
-    days = determine_days()
-
-    settings = etc.retrieve_JSON('settings.json')
-
-    reddit_control.scrape(
-        settings['reddit']['subreddits'], export_directory, days=days)
-
-
-@scraper.command()
-def tigsource():
-    export_directory = determine_export_destination(prefix='tigsource')
-    etc.create_directory(export_directory)
-
-    days = determine_days()
-
-    settings = etc.retrieve_JSON('settings.json')
-
-    TIG_control.scrape(
-        settings['tigsource']['topics'], export_directory, days=days)
-
-
-@scraper.command()
-def tumblr():
-    export_directory = determine_export_destination(prefix='tumblr')
-    etc.create_directory(export_directory)
-
-    days = determine_days()
-
-    settings = etc.retrieve_JSON('settings.json')
-
-    tumblr_control.scrape(
-        settings['tumblr']['blogs'], export_directory, days=days)
-
-
-@scraper.command()
-def twitter():
-    export_directory = determine_export_destination(prefix='twitter')
-    etc.create_directory(export_directory)
-
-    days = determine_days()
-
-    settings = etc.retrieve_JSON('settings.json')
-
-    twitter_control.scrape(
-        settings['twitter']['users'], export_directory, days=days)
+    vecho(ctx, "\nEND SCRAPE", fg='yellow')
