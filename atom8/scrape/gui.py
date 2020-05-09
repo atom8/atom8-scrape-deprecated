@@ -1,3 +1,17 @@
+"""Atom8-Scrape GUI
+
+This is a gui frontend for atom8-scrape.
+
+Through this gui user is able to:
+    - create & manage settings
+    - run atom8-scrape
+
+Note:
+    Although the source is held beside atom8-scrape, the two apps are logically
+    separate. Therefore, be sure to use absolute imports when interacting with
+    atom8-scrape.
+"""
+
 import enum
 import os
 import sys
@@ -9,13 +23,8 @@ from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog
 
-from .config import load_config
-from . import etc
-from .integrations import instagram as insta_control
-from .integrations import reddit as reddit_control
-from .integrations import tigsource as tigsource_control
-from .integrations import tumblr as tumblr_control
-from .integrations import twitter as twitter_control
+from atom8.scrape import etc, integrations
+from atom8.scrape.config import load_config
 
 # App config
 config = None
@@ -34,97 +43,7 @@ EXPORT_DIRECTORY = None
 SCRAPE_RANGE = 0
 
 
-class ScrapeRange(enum.IntEnum):
-    '''An enum that specifies the different range options for scraper.'''
-    CUSTOM = 1,
-    SINCE_LAST = 2,
-    ONE_WEEK = 3
-
-
-class ScrapeThreadWrapper():
-    def __init__(self):
-        self.scraper_thread = threading.Thread(target=self.run, args=())
-        self.scraper_thread.daemon = True
-        self.scraper_thread.start()
-
-    def run(self):
-        global REQUEST_SCRAPE
-
-        while True:
-            if REQUEST_SCRAPE:
-                REQUEST_SCRAPE = False
-                print('*** SCRAPE STARTING ***')
-                print('Scrape Range: %d days' % SCRAPE_RANGE)
-                result = perform_scrape(EXPORT_DIRECTORY, SCRAPE_RANGE)
-                if result == 0:
-                    print('*** SCRAPE COMPLETED ***')
-                else:
-                    print('*** SCRAPE STOPPED ***')
-            time.sleep(1)
-
-
-def perform_scrape(export_directory, days):
-    if export_directory is None or not export_directory:
-        print('[ERROR] Specify an export directory')
-        return
-
-    if not os.path.isdir(export_directory):
-        print('[ERROR] Export directory (%s) does not exist' %
-              export_directory)
-        return
-
-    timestamped_export_dir = etc.timestamp_directory(export_directory)
-
-    # Create an export directory
-    try:
-        etc.create_directory(timestamped_export_dir)
-        print('Export directory created @ %s' %
-              timestamped_export_dir)
-    except OSError:
-        return
-
-    # Perform instagram scrape
-    if config.options['instagram']['enabled']:
-        print('Performing Instagram scrape')
-        insta_control.scrape(
-            config.options['instagram']['profiles'], timestamped_export_dir,
-            days=days)
-
-    # Perform reddit scrape
-    if config.options['reddit']['enabled']:
-        print('Performing Reddit scrape')
-        reddit_control.scrape(
-            config.options['reddit']['subreddits'], timestamped_export_dir,
-            days=days)
-
-    # Perform tigsource scrape
-    if config.options['tigsource']['enabled']:
-        print('Performing TIGsource scrape')
-        tigsource_control.scrape(
-            config.options['tigsource']['topics'], timestamped_export_dir,
-            days=days)
-
-    # Perform tumblr scrape
-    if config.options['tumblr']['enabled']:
-        print('Performing tumblr scrape')
-        tumblr_control.scrape(
-            config.options['tumblr']['blogs'], timestamped_export_dir,
-            days=days)
-
-    # Perform twitter scrape
-    if config.options['twitter']['enabled']:
-        print('Performing Twitter scrape')
-        twitter_control.scrape(
-            config.options['twitter']['users'], timestamped_export_dir,
-            days=days)
-
-    config.options['all']['last_scrape_date'] = str(datetime.now().date())
-    config.save_options()
-
-    return 0
-
-
-class MainApplication(tk.Frame):
+class Atom8ScrapeApp(tk.Frame):
 
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs),
@@ -193,7 +112,7 @@ class MainApplication(tk.Frame):
 
         tk.Label(output_frame, text='Output').pack(fill=tk.X)
         self.output = tk.Text(output_frame, height=10, width=40)
-        self.output.insert(tk.END, 'Welcome to GDI scrape\n')
+        self.output.insert(tk.END, 'Welcome to Atom8-Scrape\n')
         self.output.pack(side='left', fill=tk.BOTH, expand=True)
         out_scroll = tk.Scrollbar(output_frame)
         out_scroll.config(command=self.output.yview)
@@ -767,6 +686,35 @@ class MainApplication(tk.Frame):
         config.save_options()
 
 
+class ScrapeRange(enum.IntEnum):
+    '''An enum that specifies the different range options for scraper.'''
+    CUSTOM = 1,
+    SINCE_LAST = 2,
+    ONE_WEEK = 3
+
+
+class ScrapeThreadWrapper():
+    def __init__(self):
+        self.scraper_thread = threading.Thread(target=self.run, args=())
+        self.scraper_thread.daemon = True
+        self.scraper_thread.start()
+
+    def run(self):
+        global REQUEST_SCRAPE
+
+        while True:
+            if REQUEST_SCRAPE:
+                REQUEST_SCRAPE = False
+                print('*** SCRAPE STARTING ***')
+                print('Scrape Range: %d days' % SCRAPE_RANGE)
+                result = perform_scrape(EXPORT_DIRECTORY, SCRAPE_RANGE)
+                if result == 0:
+                    print('*** SCRAPE COMPLETED ***')
+                else:
+                    print('*** SCRAPE STOPPED ***')
+            time.sleep(1)
+
+
 class StdoutRedirector(object):
     '''Redirect all print statements to a textarea. Used by MainApplication.'''
     def __init__(self, text_widget):
@@ -777,6 +725,66 @@ class StdoutRedirector(object):
         self.text_space.update()
 
 
+def perform_scrape(export_directory, days):
+    if export_directory is None or not export_directory:
+        print('[ERROR] Specify an export directory')
+        return
+
+    if not os.path.isdir(export_directory):
+        print('[ERROR] Export directory (%s) does not exist' %
+              export_directory)
+        return
+
+    timestamped_export_dir = etc.timestamp_directory(export_directory)
+
+    # Create an export directory
+    try:
+        etc.create_directory(timestamped_export_dir)
+        print('Export directory created @ %s' %
+              timestamped_export_dir)
+    except OSError:
+        return
+
+    # Perform instagram scrape
+    if config.options['instagram']['enabled']:
+        integrations.instagram.scrape(
+            config.options['instagram']['profiles'], timestamped_export_dir,
+            days=days)
+
+    # Perform reddit scrape
+    if config.options['reddit']['enabled']:
+        print('Performing Reddit scrape')
+        integrations.reddit.scrape(
+            config.options['reddit']['subreddits'], timestamped_export_dir,
+            days=days)
+
+    # Perform tigsource scrape
+    if config.options['tigsource']['enabled']:
+        print('Performing TIGsource scrape')
+        integrations.tigsource.scrape(
+            config.options['tigsource']['topics'], timestamped_export_dir,
+            days=days)
+
+    # Perform tumblr scrape
+    if config.options['tumblr']['enabled']:
+        print('Performing tumblr scrape')
+        integrations.tumblr.scrape(
+            config.options['tumblr']['blogs'], timestamped_export_dir,
+            days=days)
+
+    # Perform twitter scrape
+    if config.options['twitter']['enabled']:
+        print('Performing Twitter scrape')
+        integrations.twitter.scrape(
+            config.options['twitter']['users'], timestamped_export_dir,
+            days=days)
+
+    config.options['all']['last_scrape_date'] = str(datetime.now().date())
+    config.save_options()
+
+    return 0
+
+
 def run_app():
     # Load configuration
     global config
@@ -784,17 +792,17 @@ def run_app():
 
     # Create root tkinter
     root = tk.Tk()
-    root.title('GDI Scraper')
+    root.title('Atom8-Scrape')
     root.geometry('%sx%s' % (APP_WIDTH, APP_HEIGHT))
 
-    # Change back stdout from MainApplication output before exiting program
+    # Change back stdout from Atom8ScrapeApp output before exiting program
     def on_closing():
         sys.stdout = sys.__stdout__
         root.destroy()
     root.protocol('WM_DELETE_WINDOW', on_closing)
 
     # Create main application frame. Remainder of view logic is inside here.
-    MainApplication(root).pack(side="top", fill="both", expand=True)
+    Atom8ScrapeApp(root).pack(side="top", fill="both", expand=True)
 
     # scraper thread is started automatically through wrapper.
     ScrapeThreadWrapper()

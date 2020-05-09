@@ -33,8 +33,15 @@ def vecho(ctx, message, **kwargs):
 
 @click.group()
 @click.option('-v', '--verbose', default=False, is_flag=True)
+@click.option('-e', '--exportdir', default='desktop',
+              help='specify export directory (desktop)')
+@click.option('-d', '--depth', default=3,
+              help='number of days to scrape (3)')
+@click.argument('settings_path', nargs=1, type=click.Path(exists=True),
+                required=True)
+@click.argument('target', nargs=-1, required=True)
 @click.pass_context
-def main(ctx, verbose):
+def main(ctx, verbose, exportdir, depth, settings_path, target):
     """atom8 - scrape
 
     Scrape from popular social media websites using various conditions and
@@ -46,35 +53,6 @@ def main(ctx, verbose):
 
     # Verbosity
     ctx.obj['verbose'] = verbose
-
-
-@main.command()
-@click.option('-s', '--settings', default=None, help='use a settings file')
-@click.pass_context
-def gui(ctx, settings):
-    """Launch the GUI editor"""
-    from atom8scrape import gui
-
-    if settings is not None:
-        vecho(ctx, "Loading settings: %s" % settings)
-        # TODO gui.run_app(settings=load_settings(ctx, settings))
-    gui.run_app()
-
-
-@main.command()
-@click.option('-e', '--exportdir', default='desktop',
-              help='specify export directory (desktop)')
-@click.option('-d', '--depth', default=3,
-              help='number of days to scrape (3)')
-@click.argument('settings_path', nargs=1, type=click.Path(exists=True),
-                required=True)
-@click.argument('target', nargs=-1, required=True)
-@click.pass_context
-def scrape(ctx, exportdir, depth, settings_path, target):
-    """Perform scrape.
-
-    Requires a settings file.
-    """
 
     # Load settings
     vecho(ctx, "Loading settings: %s" % settings_path, fg='magenta')
